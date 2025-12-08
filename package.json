@@ -1,20 +1,25 @@
 {
-  "name": "nova-reservations",
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
-  },
-  "devDependencies": {
-    "prettier": "^3.6.2",
-    "turbo": "^2.6.3",
-    "typescript": "5.9.2"
-  },
-  "packageManager": "pnpm@9.0.0",
-  "engines": {
-    "node": ">=18"
-  }
+	"name": "nova-reservations",
+	"private": true,
+	"scripts": {
+		"build": "turbo run build",
+		"build:web": "turbo run build --filter=web",
+		"build:admin": "turbo run build --filter=admin",
+		"dev": "turbo run dev",
+		"dev:web": "turbo run dev --filter=web",
+		"dev:admin": "turbo run dev --filter=admin",
+		"lint": "biome check .",
+		"format": "biome check . --write",
+		"typecheck": "turbo run check-types"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.8",
+		"prettier": "^3.6.2",
+		"turbo": "^2.6.3",
+		"typescript": "5.9.2"
+	},
+	"packageManager": "pnpm@9.0.0",
+	"engines": {
+		"node": ">=18"
+	}
 }
