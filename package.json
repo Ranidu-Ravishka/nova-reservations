@@ -8,7 +8,6 @@
 		"dev": "turbo run dev",
 		"dev:web": "turbo run dev --filter=web",
 		"dev:admin": "turbo run dev --filter=admin",
-		"dev:api": "turbo run dev --filter=@nova/api",
 		"lint": "biome check .",
 		"format": "biome check . --write",
 		"typecheck": "turbo run check-types"
