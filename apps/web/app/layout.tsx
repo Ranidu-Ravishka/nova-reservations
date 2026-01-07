@@ -13,7 +13,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider
           attribute="class"
-          //defaultTheme="dark"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
