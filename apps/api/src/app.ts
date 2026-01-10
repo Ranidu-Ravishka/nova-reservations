@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import amenityRoutes from "./routes/amenity.routes";
 import authRoutes from "./routes/auth.routes";
+import availabilityRoutes from "./routes/availability.routes";
 import hotelRoutes from "./routes/hotel.routes";
 import paymentRoutes from "./routes/payment.routes";
 import reservationRoutes from "./routes/reservation.routes";
@@ -25,6 +26,7 @@ app.use("/api/staff", staffRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/amenities", amenityRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/availability", availabilityRoutes);
 
 app.get("/", (_, res) => {
 	res.send("Nova Reservations API running 🚀");

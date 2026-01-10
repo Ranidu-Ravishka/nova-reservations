@@ -18,4 +18,4 @@ router.post("/", authenticate, authorize("ADMIN"), createHotel);
 router.put("/:id", authenticate, authorize("ADMIN"), updateHotel);
 router.delete("/:id", authenticate, authorize("ADMIN"), deleteHotel);
 
-export default router; 
+export default router;

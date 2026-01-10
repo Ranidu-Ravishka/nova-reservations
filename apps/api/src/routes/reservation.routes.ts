@@ -15,7 +15,12 @@ router.post("/", authenticate, authorize("CUSTOMER"), createReservation);
 
 // STAFF + ADMIN manage reservations
 router.get("/", authenticate, authorize("ADMIN", "STAFF"), getReservations);
-router.put("/:id", authenticate, authorize("ADMIN", "STAFF"), updateReservationStatus);
+router.put(
+	"/:id",
+	authenticate,
+	authorize("ADMIN", "STAFF"),
+	updateReservationStatus,
+);
 router.delete("/:id", authenticate, authorize("ADMIN"), deleteReservation);
 
 export default router;
