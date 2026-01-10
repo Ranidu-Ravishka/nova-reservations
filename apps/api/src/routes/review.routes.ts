@@ -4,11 +4,13 @@ import {
 	deleteReview,
 	getReviews,
 } from "../controllers/review.controller";
+import { authenticate } from "../middlewares/auth.middleware";
+import { authorize } from "../middlewares/role.middleware";
 
 const router = Router();
 
-router.post("/", createReview);
+router.post("/", authenticate, authorize("CUSTOMER"), createReview);
+router.delete("/:id", authenticate, authorize("ADMIN"), deleteReview);
 router.get("/", getReviews);
-router.delete("/:id", deleteReview);
 
 export default router;

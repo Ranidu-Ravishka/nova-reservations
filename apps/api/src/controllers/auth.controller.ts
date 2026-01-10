@@ -46,17 +46,22 @@ export const login = async (req: Request, res: Response) => {
 	const { email, password } = req.body;
 
 	const user = await User.findOne({ email });
-	if (!user || !(await bcrypt.compare(password, user.password))) {
-		return res.status(401).json({ message: "Invalid credentials" });
-	}
+	if (!user) return res.status(404).json({ message: "User not found" });
+
+	const isMatch = await bcrypt.compare(password, user.password);
+	if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+	const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
+		expiresIn: JWT_EXPIRES_IN ?? "1d",
+	});
 
 	res.json({
-		token: generateToken(user._id.toString(), user.role),
+		token,
+		role: user.role,
 		user: {
 			id: user._id,
 			name: user.name,
 			email: user.email,
-			role: user.role,
 		},
 	});
 };

@@ -5,16 +5,17 @@ import {
 	getReservations,
 	updateReservationStatus,
 } from "../controllers/reservation.controller";
-import { adminOnly, protect } from "../middlewares/auth.middleware";
+import { authenticate } from "../middlewares/auth.middleware";
+import { authorize } from "../middlewares/role.middleware";
 
 const router = Router();
 
-// Customer
-router.post("/", protect, createReservation);
+// CUSTOMER creates reservation
+router.post("/", authenticate, authorize("CUSTOMER"), createReservation);
 
-// Admin
-router.get("/", protect, adminOnly, getReservations);
-router.put("/:id", protect, adminOnly, updateReservationStatus);
-router.delete("/:id", protect, adminOnly, deleteReservation);
+// STAFF + ADMIN manage reservations
+router.get("/", authenticate, authorize("ADMIN", "STAFF"), getReservations);
+router.put("/:id", authenticate, authorize("ADMIN", "STAFF"), updateReservationStatus);
+router.delete("/:id", authenticate, authorize("ADMIN"), deleteReservation);
 
 export default router;
