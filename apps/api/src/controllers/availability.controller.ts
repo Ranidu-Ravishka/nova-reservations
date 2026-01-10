@@ -13,12 +13,11 @@ export const getRoomAvailability = async (req: Request, res: Response) => {
 };
 
 export const cancelReservation = async (req: Request, res: Response) => {
-  const reservation = await Reservation.findByIdAndUpdate(
-    req.params.id,
-    { status: "CANCELLED" },
-    { new: true }
-  );
+	const reservation = await Reservation.findByIdAndUpdate(
+		req.params.id,
+		{ status: "CANCELLED" },
+		{ new: true },
+	);
 
-  res.json(reservation);
+	res.json(reservation);
 };
-
