@@ -31,6 +31,9 @@ a {
 .card-card{
 	padding: 20px;
 }
+.card-1{
+	padding-top: 20px;
+}
 
 /* @media (prefers-color-scheme: dark) {
 	html {

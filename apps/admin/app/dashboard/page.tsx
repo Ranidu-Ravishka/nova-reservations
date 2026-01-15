@@ -133,8 +133,8 @@ export default function Dashboard() {
       </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 card-1 ">
+        <Card className="lg:col-span-2 ">
           <CardHeader>
             <CardTitle className="text-lg">Performance Metrics</CardTitle>
           </CardHeader>
@@ -173,7 +173,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               <button
                 type="button"
-                className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="font-medium text-gray-900">Check-in Today</div>
                 <div className="text-sm text-gray-600">
@@ -182,7 +182,7 @@ export default function Dashboard() {
               </button>
               <button
                 type="button"
-                className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="font-medium text-gray-900">Check-out Today</div>
                 <div className="text-sm text-gray-600">
@@ -191,7 +191,7 @@ export default function Dashboard() {
               </button>
               <button
                 type="button"
-                className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="font-medium text-gray-900">
                   Pending Requests
