@@ -23,15 +23,15 @@ a {
 .imgDark {
 	display: none;
 }
-.admin{
+.admin {
 	box-sizing: border-box;
 	padding: 10px;
 	margin: 0;
 }
-.card-card{
+.card-card {
 	padding: 20px;
 }
-.card-1{
+.card-1 {
 	padding-top: 20px;
 }
 
@@ -158,7 +158,6 @@ a {
 	--sidebar-border: oklch(0.922 0 0);
 	--sidebar-ring: oklch(0.708 0 0);
 }
-
 
 /* @layer base {
   * {

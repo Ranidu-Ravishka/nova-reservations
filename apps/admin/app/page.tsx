@@ -1,5 +1,6 @@
 "use client";
+import Dashboard from "./dashboard/page";
 
 export default function Home() {
-  return <div className="web p-10">web</div>;
+	return <Dashboard />;
 }
