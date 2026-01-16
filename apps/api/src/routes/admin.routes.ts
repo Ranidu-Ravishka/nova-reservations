@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protect, adminOnly } from "../middlewares/auth.middleware";
 import { getDashboardStats } from "../controllers/admin.controller";
+import { adminOnly, protect } from "../middlewares/auth.middleware";
 
 const router = Router();
 

@@ -7,9 +7,9 @@ const ReservationSchema = new Schema(
 		checkIn: { type: Date, required: true },
 		checkOut: { type: Date, required: true },
 		totalPrice: {
-  type: Number,
-  required: true,
-}, 
+			type: Number,
+			required: true,
+		},
 		status: {
 			type: String,
 			enum: ["CONFIRMED", "CANCELLED"],

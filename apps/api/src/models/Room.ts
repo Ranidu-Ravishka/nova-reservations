@@ -10,10 +10,9 @@ const RoomSchema = new Schema(
 		amenities: [String],
 		images: [String],
 		isAvailable: {
-  type: Boolean,
-  default: true,
-},
-
+			type: Boolean,
+			default: true,
+		},
 	},
 	{ timestamps: true },
 );
