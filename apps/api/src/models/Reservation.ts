@@ -6,7 +6,10 @@ const ReservationSchema = new Schema(
 		roomId: { type: Schema.Types.ObjectId, ref: "Room", required: true },
 		checkIn: { type: Date, required: true },
 		checkOut: { type: Date, required: true },
-		totalPrice: Number,
+		totalPrice: {
+  type: Number,
+  required: true,
+}, 
 		status: {
 			type: String,
 			enum: ["CONFIRMED", "CANCELLED"],
