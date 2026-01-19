@@ -22,10 +22,7 @@ export default function AdminLogin() {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({
-					email,
-					password,
-				}),
+				body: JSON.stringify({ email, password }),
 			});
 
 			const data = await res.json();
@@ -43,8 +40,12 @@ export default function AdminLogin() {
 
 			// ✅ Redirect to dashboard
 			router.push("/dashboard");
-		} catch (err: any) {
-			setError(err.message || "Something went wrong");
+		} catch (err: unknown) {
+			if (err instanceof Error) {
+				setError(err.message);
+			} else {
+				setError("Something went wrong");
+			}
 		} finally {
 			setLoading(false);
 		}

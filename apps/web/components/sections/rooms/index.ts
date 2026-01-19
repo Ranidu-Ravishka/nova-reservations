@@ -1,2 +1,2 @@
-export { RoomDetailSection } from "./room-detail-section"
-export { RoomsListingSection } from "./rooms-listing-section"
+export { RoomDetailSection } from "./room-detail-section";
+export { RoomsListingSection } from "./rooms-listing-section";

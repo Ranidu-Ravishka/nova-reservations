@@ -19,9 +19,14 @@ export const getHotels = async (_: Request, res: Response) => {
 
 // GET single hotel
 export const getHotelById = async (req: Request, res: Response) => {
-	const hotel = await Hotel.findById(req.params.id);
-	if (!hotel) return res.status(404).json({ message: "Hotel not found" });
-	res.json(hotel);
+	try {
+		const hotel = await Hotel.findById(req.params.id);
+
+		if (!hotel) return res.status(404).json({ message: "Hotel not found" });
+		res.json(hotel);
+	} catch (error) {
+		res.status(400).json({ message: "Failed to retrieve hotel", error });
+	}
 };
 
 // UPDATE hotel (Admin)

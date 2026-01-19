@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { Edit2, Loader2, MapPin, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +15,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { api } from "@/lib/api";
 import HotelForm from "./HotelForm";
 
 type Hotel = {
@@ -37,7 +37,7 @@ export default function HotelsPage() {
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	useEffect(() => {
-		axios.get("http://localhost:4000/api/hotels").then((res) => {
+		api.get("/hotels").then((res) => {
 			setHotels(res.data);
 			setLoading(false);
 		});
@@ -52,7 +52,7 @@ export default function HotelsPage() {
 	const handleDelete = async (id: string) => {
 		if (!confirm("Delete this hotel?")) return;
 		setDeletingId(id);
-		await axios.delete(`http://localhost:4000/api/hotels/${id}`);
+		await api.delete(`/hotels/${id}`);
 		setHotels((prev) => prev.filter((h) => h._id !== id));
 		setDeletingId(null);
 	};

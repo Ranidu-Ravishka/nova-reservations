@@ -1,53 +1,58 @@
+import { notFound } from "next/navigation";
 import {
-  HotelHeroSection,
-  HotelOverviewSection,
-  HotelAmenitiesSection,
-  HotelGallerySection,
-  HotelRoomsSection,
-} from "@/components/sections/hotels"
+	HotelAmenitiesSection,
+	HotelGallerySection,
+	HotelHeroSection,
+	HotelOverviewSection,
+	HotelRoomsSection,
+} from "@/components/sections/hotels";
 
-import { hotels } from "@/lib/data"
-import { notFound } from "next/navigation"
+/* -------------------------
+   API FETCH
+-------------------------- */
+async function getHotel(id: string) {
+	const res = await fetch(`http://localhost:4000/api/hotels/${id}`, {
+		cache: "no-store",
+	});
 
-type HotelKey = keyof typeof hotels
+	if (!res.ok) return null;
+	return res.json();
+}
 
+/* -------------------------
+   PAGE
+-------------------------- */
 export default async function HotelPage({
-  params,
+	params,
 }: {
-  params: Promise<{ id: string }>
+	params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
+	const { id } = await params;
 
-  const hotel = hotels[id as HotelKey]
+	const hotel = await getHotel(id);
 
-  if (!hotel) {
-    notFound()
-  }
+	if (!hotel) {
+		notFound();
+	}
 
-  return (
-    <>
-      <HotelHeroSection hotel={hotel} />
+	return (
+		<>
+			<HotelHeroSection hotel={hotel} />
 
-      <HotelOverviewSection
-        hotel={{
-          id: hotel.id,
-          name: hotel.name,
-          longDescription: hotel.longDescription,
-          coordinates: hotel.coordinates,
-        }}
-      />
+			<HotelOverviewSection
+				hotel={{
+					id: hotel._id,
+					name: hotel.name,
+					longDescription: hotel.description,
+					coordinates: hotel.coordinates ?? null,
+				}}
+			/>
 
-      <HotelAmenitiesSection amenities={hotel.amenities} />
+			<HotelAmenitiesSection amenities={hotel.amenities ?? []} />
 
-      <HotelGallerySection
-        images={hotel.galleryImages}
-        hotelName={hotel.name}
-      />
+			<HotelGallerySection images={hotel.images ?? []} hotelName={hotel.name} />
 
-      <HotelRoomsSection
-        hotelId={hotel.id}
-        hotelName={hotel.name}
-      />
-    </>
-  )
+			<HotelRoomsSection hotelId={hotel._id} hotelName={hotel.name} />
+		</>
+	);
 }

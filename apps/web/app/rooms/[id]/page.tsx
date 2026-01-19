@@ -1,19 +1,19 @@
-import { notFound } from "next/navigation"
-import { roomTypes } from "@/lib/data"
-import { RoomDetailSection } from "@/components/sections/rooms/room-detail-section"
+import { notFound } from "next/navigation";
+import { RoomDetailSection } from "@/components/sections/rooms/room-detail-section";
+import { fetchRoom } from "@/lib/api";
 
 export default async function RoomPage({
-  params,
+	params,
 }: {
-  params: Promise<{ id: string }>
+	params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
+	const { id } = await params;
 
-  const room = roomTypes.find((r) => r.id === id)
+	const room = await fetchRoom(id);
 
-  if (!room) {
-    notFound()
-  }
+	if (!room) {
+		notFound();
+	}
 
-  return <RoomDetailSection room={room} />
+	return <RoomDetailSection room={room} />;
 }

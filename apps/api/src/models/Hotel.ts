@@ -10,7 +10,13 @@ const HotelSchema = new Schema(
 		description: String,
 		amenities: [String],
 		images: [String],
+
+		coordinates: {
+			lat: { type: Number, required: true },
+			lng: { type: Number, required: true },
+		},
 	},
+
 	{ timestamps: true },
 );
 
