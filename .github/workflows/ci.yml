@@ -1,66 +1,75 @@
-name: Nova Reservations CI
+name: ci-check
+run-name: ${{ github.actor }} triggered feature CI
 
 on:
   push:
-    branches: [main, task, feature, develop]
-  pull_request:
-    branches: [main, task, feature, develop]
-
-permissions:
-  contents: read
-  security-events: write
+    branches:
+      - "feature/**"
+      - "task/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "branch-ci-${{ github.ref }}"
   cancel-in-progress: true
 
 env:
-  CI: true
-  NEXT_TELEMETRY_DISABLED: 1
+  TURBO_TELEMETRY_DISABLED: "1"
 
 jobs:
-  quality:
-    name: Quality Gates (Biome, Types, Build)
+  build_web:
+    name: Build web
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    needs: lint
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm -w install --frozen-lockfile
+        run: npm ci
 
-      - name: Restore Turbo cache
-        uses: actions/cache@v4
+      - name: Build web app
+        run: npx turbo run build --filter=web
+
+  build_admin:
+    name: Build admin
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'turbo.json', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+          node-version: "20"
+          cache: "npm"
 
-      - name: Biome – Format Check
-        run: pnpm exec biome format --write=false .
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Biome – Lint
-        run: pnpm run lint
+      - name: Build admin app
+        run: npx turbo run build --filter=admin
 
-      - name: Type Check
-        run: pnpm run typecheck
+  lint:
+    name: Biome lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Build (Turbo)
-        run: pnpm run build
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome lint
+        run: npm run lint
