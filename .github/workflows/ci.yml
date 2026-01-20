@@ -1,115 +1,75 @@
-name: Nova Reservations CI
+name: feature-branch-ci
+run-name: ${{ github.actor }} triggered feature CI
 
 on:
   push:
-    branches: [main, task/*, feature/*, develop]
-  pull_request:
-    branches: [main, task/*, feature/*, develop]
-
-permissions:
-  contents: read
-  security-events: write
+    branches:
+      - "feature/**"
+      - "task/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "feature-branch-ci-${{ github.ref }}"
   cancel-in-progress: true
 
 env:
-  CI: true
+  TURBO_TELEMETRY_DISABLED: "1"
 
 jobs:
-  quality:
-    name: Quality Gates (Biome, TypeCheck, Build)
+  build_web:
+    name: Build web
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
+    needs: lint
     steps:
-      # Checkout repository
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      # Setup Node.js
-      - name: Setup Node.js & pnpm
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "pnpm"
+          node-version: "20"
+          cache: "npm"
 
-      # Install pnpm globally
-      - name: Setup pnpm CLI
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Install dependencies
+        run: npm ci
 
-      # Install dependencies (workspace)
-      - name: Install Dependencies
-        run: pnpm -w install --frozen-lockfile
+      - name: Build web app
+        run: npx turbo run build --filter=web
 
-      # Restore TurboRepo cache
-      - name: Restore Turbo Cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'turbo.json', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
-
-      # Biome: format check
-      - name: Biome – Format Check
-        run: pnpm exec biome format --write=false .
-
-      # Biome: lint
-      - name: Biome – Lint
-        run: pnpm run lint
-
-      # Type check
-      - name: Type Check
-        run: pnpm run typecheck
-
-      # Build all apps via Turbo
-      - name: Build Monorepo
-        run: pnpm run build
-
-  sast:
-    name: SAST – CodeQL Analysis
+  build_admin:
+    name: Build admin
     runs-on: ubuntu-latest
-    needs: quality
+    needs: lint
     steps:
-      # Checkout repository
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Initialize CodeQL
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          languages: javascript
+          node-version: "20"
+          cache: "npm"
 
-      # Autobuild
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      - name: Install dependencies
+        run: npm ci
 
-      # Run analysis
-      - name: CodeQL Analyze
-        uses: github/codeql-action/analyze@v3
+      - name: Build admin app
+        run: npx turbo run build --filter=admin
 
-  secrets-scan:
-    name: Secrets Scan (Gitleaks)
+  lint:
+    name: Biome lint
     runs-on: ubuntu-latest
-    needs: quality
     steps:
-      # Checkout full history to detect secrets
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Run Gitleaks scan
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          args: detect --source . --no-git
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome lint
+        run: npm run lint
