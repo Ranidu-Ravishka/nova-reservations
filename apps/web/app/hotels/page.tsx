@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic";
+
+import { id } from "date-fns/locale";
 import { fetchHotels } from "@/lib/api";
 
 interface Hotel {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HeroSection() {
 	return (
-		<section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
+		<section className="relative h-screen min-h-175 flex items-center justify-center overflow-hidden">
 			<div
 				className="absolute inset-0 bg-cover bg-center bg-no-repeat"
 				style={{

@@ -11,22 +11,10 @@ export const createRoom = async (req: Request, res: Response) => {
 	}
 };
 
-/* ---------------- GET ROOMS (OPTIONAL HOTEL FILTER) ---------------- */
 export const getRooms = async (req: Request, res: Response) => {
-	try {
-		const { hotelId } = req.query;
-
-		const filter: Record<string, unknown> = {};
-		if (hotelId) {
-			filter.hotelId = hotelId;
-		}
-
-		const rooms = await Room.find(filter).populate("hotelId");
-
-		res.status(200).json(rooms);
-	} catch (_error) {
-		res.status(500).json({ message: "Failed to fetch rooms" });
-	}
+	const filter = req.query.hotelId ? { hotelId: req.query.hotelId } : {};
+	const rooms = await Room.find(filter);
+	res.json(rooms);
 };
 
 /* ---------------- GET SINGLE ROOM ---------------- */

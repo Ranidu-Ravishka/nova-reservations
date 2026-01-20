@@ -1,129 +1,118 @@
 "use client";
 
-import axios from "axios";
-import { useCallback, useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Edit2, Loader2, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { api } from "@/lib/api";
 import RoomForm from "./RoomForm";
 
-type Hotel = { _id: string; name: string };
 type Room = {
 	_id: string;
 	name: string;
-	size?: string;
-	hotelId?: Hotel | null;
 	pricePerNight: number;
-	occupancy: number;
+	hotelId: { _id: string; name: string };
 };
 
 export default function RoomsPage() {
 	const [rooms, setRooms] = useState<Room[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 	const [open, setOpen] = useState(false);
-	const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
 
-	const fetchRooms = useCallback(async () => {
-		const res = await axios.get("http://localhost:4000/api/rooms");
+	const loadRooms = async () => {
+		const res = await api.get("/rooms");
 		setRooms(res.data);
-	}, []);
+		setLoading(false);
+	};
 
 	useEffect(() => {
-		fetchRooms();
-	}, [fetchRooms]);
+		loadRooms();
+	}, [loadRooms]);
+
+	const remove = async (id: string) => {
+		if (!confirm("Delete this room?")) return;
+		await api.delete(`/rooms/${id}`);
+		setRooms((prev) => prev.filter((r) => r._id !== id));
+	};
 
 	return (
-		<>
+		<div className="p-6 max-w-6xl mx-auto">
 			<div className="flex justify-between mb-6">
-				<h2 className="text-xl font-semibold">Rooms</h2>
-				<Button
-					onClick={() => {
-						setSelectedRoom(undefined);
-						setOpen(true);
-					}}
-				>
-					Add Room
-				</Button>
+				<h1 className="text-2xl font-semibold">Rooms</h1>
+
+				<Dialog open={open} onOpenChange={setOpen}>
+					<DialogTrigger asChild>
+						<Button>
+							<Plus className="h-4 w-4 mr-2" /> Add Room
+						</Button>
+					</DialogTrigger>
+
+					<DialogContent aria-describedby={undefined}>
+						<RoomForm
+							room={editingRoom}
+							onSuccess={() => {
+								setEditingRoom(null);
+								setOpen(false);
+								loadRooms();
+							}}
+						/>
+					</DialogContent>
+				</Dialog>
 			</div>
 
-			<div className="rounded-xl overflow-hidden border border-white/10">
-				<table className="w-full">
-					<thead className="bg-white/5">
-						<tr>
-							<th className="p-3 text-left">Room</th>
-							<th className="p-3">Hotel</th>
-							<th className="p-3">Price</th>
-							<th className="p-3">Occupancy</th>
-							<th className="p-3">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
+			{loading ? (
+				<Loader2 className="animate-spin" />
+			) : (
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>Room</TableHead>
+							<TableHead>Hotel</TableHead>
+							<TableHead>Price</TableHead>
+							<TableHead className="text-right">Actions</TableHead>
+						</TableRow>
+					</TableHeader>
+
+					<TableBody>
 						{rooms.map((room) => (
-							<tr
-								key={room._id}
-								className="border-t border-white/10 hover:bg-white/5"
-							>
-								<td className="p-3">
-									<p className="font-medium">{room.name}</p>
-									<p className="text-sm text-gray-400">{room.size}</p>
-								</td>
-
-								<td className="p-3 text-center">
-									<Badge variant="outline">{room.hotelId?.name || "—"}</Badge>
-								</td>
-
-								<td className="p-3 text-center">${room.pricePerNight}</td>
-
-								<td className="p-3 text-center">{room.occupancy} Guests</td>
-
-								<td className="p-3 flex justify-center gap-2">
+							<TableRow key={room._id}>
+								<TableCell>{room.name}</TableCell>
+								<TableCell>{room.hotelId?.name}</TableCell>
+								<TableCell>${room.pricePerNight}</TableCell>
+								<TableCell className="text-right flex gap-2 justify-end">
 									<Button
-										size="sm"
-										variant="outline"
+										size="icon"
+										variant="ghost"
 										onClick={() => {
-											setSelectedRoom(room);
+											setEditingRoom(room);
 											setOpen(true);
 										}}
 									>
-										Edit
+										<Edit2 className="h-4 w-4" />
 									</Button>
-									<Button
-										size="sm"
-										variant="destructive"
-										onClick={async () => {
-											await axios.delete(
-												`http://localhost:4000/api/rooms/${room._id}`,
-											);
-											fetchRooms();
-										}}
-									>
-										Delete
-									</Button>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
 
-			<Dialog open={open} onOpenChange={setOpen}>
-				<RoomForm
-					room={
-						selectedRoom
-							? {
-									...selectedRoom,
-									size: selectedRoom.size ?? "",
-									hotelId: selectedRoom.hotelId
-										? { _id: selectedRoom.hotelId._id }
-										: undefined,
-								}
-							: undefined
-					}
-					onSuccess={() => {
-						setOpen(false);
-						fetchRooms();
-					}}
-				/>
-			</Dialog>
-		</>
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={() => remove(room._id)}
+									>
+										<Trash2 className="h-4 w-4 text-red-500" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			)}
+		</div>
 	);
 }

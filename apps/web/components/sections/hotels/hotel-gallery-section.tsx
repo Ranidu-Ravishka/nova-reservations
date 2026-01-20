@@ -66,7 +66,7 @@ export function HotelGallerySection({
 								onClick={() => openLightbox(index)}
 							>
 								<div
-									className={`${index === 0 ? "aspect-square" : "aspect-[4/3]"}`}
+									className={`${index === 0 ? "aspect-square" : "aspect-4/3"}`}
 								>
 									<img
 										src={image || "/placeholder.svg"}

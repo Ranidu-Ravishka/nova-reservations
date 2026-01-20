@@ -5,7 +5,13 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
 	Table,
@@ -23,25 +29,26 @@ type Hotel = {
 	name: string;
 	location: string;
 	description?: string;
-	phone?: string;
 	category?: string;
-	createdAt?: string;
 };
 
 export default function HotelsPage() {
 	const [hotels, setHotels] = useState<Hotel[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [search, setSearch] = useState("");
-	const [dialogOpen, setDialogOpen] = useState(false);
+	const [open, setOpen] = useState(false);
 	const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
+	const loadHotels = async () => {
+		const res = await api.get<Hotel[]>("/hotels");
+		setHotels(res.data);
+		setLoading(false);
+	};
+
 	useEffect(() => {
-		api.get("/hotels").then((res) => {
-			setHotels(res.data);
-			setLoading(false);
-		});
-	}, []);
+		loadHotels();
+	}, [loadHotels]);
 
 	const filteredHotels = hotels.filter(
 		(h) =>
@@ -58,9 +65,9 @@ export default function HotelsPage() {
 	};
 
 	return (
-		<div className="p-4 md:p-6 max-w-6xl mx-auto">
+		<div className="p-6 max-w-6xl mx-auto">
 			{/* Header */}
-			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+			<div className="flex justify-between mb-6">
 				<div>
 					<h1 className="text-2xl font-semibold">Hotels</h1>
 					<p className="text-sm text-muted-foreground">
@@ -68,19 +75,26 @@ export default function HotelsPage() {
 					</p>
 				</div>
 
-				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+				<Dialog open={open} onOpenChange={setOpen}>
 					<DialogTrigger asChild>
 						<Button>
 							<Plus className="h-4 w-4 mr-2" />
 							Add Hotel
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="max-w-lg">
+
+					<DialogContent className="max-w-xl">
+						<DialogTitle className="sr-only">Hotel Form</DialogTitle>
+						<DialogDescription className="sr-only">
+							Create or edit a hotel
+						</DialogDescription>
+
 						<HotelForm
 							editingHotel={editingHotel}
 							onSuccess={() => {
-								setDialogOpen(false);
+								setOpen(false);
 								setEditingHotel(null);
+								loadHotels();
 							}}
 						/>
 					</DialogContent>
@@ -88,61 +102,47 @@ export default function HotelsPage() {
 			</div>
 
 			{/* Search */}
-			<div className="mb-4">
-				<div className="relative max-w-sm">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-					<Input
-						placeholder="Search hotels..."
-						className="pl-9"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</div>
+			<div className="mb-4 max-w-sm relative">
+				<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+				<Input
+					placeholder="Search hotels..."
+					className="pl-9"
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+				/>
 			</div>
 
 			{/* Table */}
 			<Card>
-				<CardHeader className="pb-2">
-					<CardTitle className="text-base">
-						{filteredHotels.length} Hotels
-					</CardTitle>
+				<CardHeader>
+					<CardTitle>{filteredHotels.length} Hotels</CardTitle>
 				</CardHeader>
 
-				<CardContent className="overflow-x-auto">
+				<CardContent>
 					{loading ? (
-						<p className="text-sm text-muted-foreground">Loading...</p>
-					) : filteredHotels.length === 0 ? (
-						<p className="text-sm text-muted-foreground">No hotels found.</p>
+						<p>Loading...</p>
 					) : (
 						<Table>
 							<TableHeader>
 								<TableRow>
 									<TableHead>Name</TableHead>
-									<TableHead className="hidden md:table-cell">
-										Location
-									</TableHead>
-									<TableHead className="hidden sm:table-cell">
-										Category
-									</TableHead>
+									<TableHead>Location</TableHead>
+									<TableHead>Category</TableHead>
 									<TableHead className="text-right">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
+
 							<TableBody>
 								{filteredHotels.map((hotel) => (
 									<TableRow key={hotel._id}>
-										<TableCell>
-											<div className="font-medium">{hotel.name}</div>
-											<div className="text-xs text-muted-foreground flex items-center gap-1 md:hidden">
-												<MapPin className="h-3 w-3" />
-												{hotel.location}
-											</div>
-										</TableCell>
+										<TableCell className="font-medium">{hotel.name}</TableCell>
 
-										<TableCell className="hidden md:table-cell">
+										<TableCell className="flex items-center gap-1">
+											<MapPin className="h-3 w-3" />
 											{hotel.location}
 										</TableCell>
 
-										<TableCell className="hidden sm:table-cell">
+										<TableCell>
 											<Badge variant="outline">
 												{hotel.category || "General"}
 											</Badge>
@@ -155,7 +155,7 @@ export default function HotelsPage() {
 													variant="ghost"
 													onClick={() => {
 														setEditingHotel(hotel);
-														setDialogOpen(true);
+														setOpen(true);
 													}}
 												>
 													<Edit2 className="h-4 w-4" />

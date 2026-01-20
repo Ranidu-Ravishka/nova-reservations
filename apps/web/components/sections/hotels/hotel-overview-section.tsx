@@ -6,7 +6,7 @@ import { Car, Clock, MapPin, Sparkles, Utensils, Wifi } from "lucide-react";
 interface Hotel {
 	id: string;
 	name: string;
-	longDescription: string;
+	description?: string;
 	coordinates: { lat: number; lng: number };
 }
 
@@ -38,7 +38,7 @@ export function HotelOverviewSection({ hotel }: { hotel: Hotel }) {
 							Welcome to {hotel.name}
 						</h2>
 						<p className="mt-6 text-lg text-charcoal/70 leading-relaxed">
-							{hotel.longDescription}
+							{hotel.description}
 						</p>
 
 						{/* Highlights Grid */}

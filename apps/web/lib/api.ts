@@ -21,15 +21,23 @@ export async function loginUser(email: string, password: string) {
 /* ---------------- HOTELS ---------------- */
 
 export async function fetchHotels() {
-  const res = await fetch(`${API_BASE_URL}/hotels`, {
-    cache: "no-store",
-  });
-
+	const res = await fetch(`${API_BASE_URL}/hotels`, {
+		cache: "no-store",
+	});
 
 	if (!res.ok) {
 		throw new Error("Failed to fetch hotels");
 	}
 
+	return res.json();
+}
+
+export async function fetchHotel(id: string) {
+	const res = await fetch(`${API_BASE_URL}/hotels/${id}`, {
+		cache: "no-store",
+	});
+
+	if (!res.ok) return null;
 	return res.json();
 }
 

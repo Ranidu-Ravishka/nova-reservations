@@ -13,21 +13,10 @@ const router = Router();
 
 /* ---------------- PUBLIC ---------------- */
 
-// List rooms (optionally ?hotelId=)
-router.get("/", getRooms);
-
-// Single room
+router.get("/", getRooms); // ?hotelId=
 router.get("/:id", getRoomById);
 
-/* ---------------- ADMIN / STAFF ---------------- */
-
-// Create room
-router.post("/", authenticate, authorize("ADMIN", "STAFF"), createRoom);
-
-// Update room
-router.put("/:id", authenticate, authorize("ADMIN", "STAFF"), updateRoom);
-
-// Delete room (ADMIN only)
+router.post("/", authenticate, authorize("ADMIN"), createRoom);
+router.put("/:id", authenticate, authorize("ADMIN"), updateRoom);
 router.delete("/:id", authenticate, authorize("ADMIN"), deleteRoom);
-
 export default router;

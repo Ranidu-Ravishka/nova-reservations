@@ -2,13 +2,29 @@ import { model, Schema } from "mongoose";
 
 const RoomSchema = new Schema(
 	{
-		hotelId: { type: Schema.Types.ObjectId, ref: "Hotel" },
-		name: String,
-		pricePerNight: Number,
+		hotelId: {
+			type: Schema.Types.ObjectId,
+			ref: "Hotel",
+			required: true,
+		},
+
+		name: { type: String, required: true },
+		description: String,
+
+		pricePerNight: { type: Number, required: true },
 		size: String,
 		occupancy: Number,
-		amenities: [String],
-		images: [String],
+
+		amenities: {
+			type: [String],
+			default: [],
+		},
+
+		images: {
+			type: [String],
+			default: [],
+		},
+
 		isAvailable: {
 			type: Boolean,
 			default: true,
