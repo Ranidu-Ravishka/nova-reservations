@@ -1,4 +1,4 @@
-name: Nova Reservations CI
+name: Nova Reservations CI Check
 
 on:
   push:
