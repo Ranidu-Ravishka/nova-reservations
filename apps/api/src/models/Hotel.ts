@@ -18,14 +18,8 @@ const HotelSchema = new Schema(
 		},
 
 		images: {
-			shared: {
-				type: [String],
-				default: [],
-			},
-			unique: {
-				type: [String],
-				default: [],
-			},
+			type: [String],
+			default: [],
 		},
 
 		coordinates: {

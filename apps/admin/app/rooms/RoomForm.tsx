@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { DialogTitle } from "@/components/ui/dialog";
 import {
 	Select,
 	SelectContent,
@@ -13,7 +14,10 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 
-type Hotel = { _id: string; name: string };
+type Hotel = {
+	_id: string;
+	name: string;
+};
 
 export default function RoomForm({
 	room,
@@ -23,10 +27,18 @@ export default function RoomForm({
 	onSuccess: () => void;
 }) {
 	const [hotels, setHotels] = useState<Hotel[]>([]);
+
 	const [form, setForm] = useState({
 		name: room?.name || "",
+		description: room?.description || "",
 		hotelId: room?.hotelId?._id || "",
 		pricePerNight: room?.pricePerNight || "",
+		occupancy: room?.occupancy || "",
+		size: room?.size || "",
+
+		heroImage: room?.images?.hero || "",
+		listingImage: room?.images?.listing || "",
+		galleryImages: room?.images?.gallery?.join("\n") || "",
 	});
 
 	useEffect(() => {
@@ -35,8 +47,21 @@ export default function RoomForm({
 
 	const submit = async () => {
 		const payload = {
-			...form,
+			name: form.name,
+			description: form.description,
+			hotelId: form.hotelId,
 			pricePerNight: Number(form.pricePerNight),
+			occupancy: Number(form.occupancy),
+			size: form.size,
+
+			images: {
+				hero: form.heroImage || undefined,
+				listing: form.listingImage || undefined,
+				gallery: form.galleryImages
+					.split("\n")
+					.map((i: string) => i.trim())
+					.filter(Boolean),
+			},
 		};
 
 		if (room) {
@@ -44,6 +69,7 @@ export default function RoomForm({
 		} else {
 			await api.post("/rooms", payload);
 		}
+
 		onSuccess();
 	};
 
@@ -55,6 +81,12 @@ export default function RoomForm({
 				placeholder="Room Name"
 				value={form.name}
 				onChange={(e) => setForm({ ...form, name: e.target.value })}
+			/>
+
+			<Textarea
+				placeholder="Room description"
+				value={form.description}
+				onChange={(e) => setForm({ ...form, description: e.target.value })}
 			/>
 
 			<Select
@@ -78,6 +110,41 @@ export default function RoomForm({
 				placeholder="Price per night"
 				value={form.pricePerNight}
 				onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })}
+			/>
+
+			<Input
+				type="number"
+				placeholder="Max guests"
+				value={form.occupancy}
+				onChange={(e) => setForm({ ...form, occupancy: e.target.value })}
+			/>
+
+			<Input
+				placeholder="Room size (e.g. 450 sqft)"
+				value={form.size}
+				onChange={(e) => setForm({ ...form, size: e.target.value })}
+			/>
+
+			{/* IMAGE FIELDS */}
+			<Input
+				placeholder="Hero image path (used on room page top)"
+				value={form.heroImage}
+				onChange={(e) => setForm({ ...form, heroImage: e.target.value })}
+			/>
+
+			<Input
+				placeholder="Listing image path (used on cards)"
+				value={form.listingImage}
+				onChange={(e) => setForm({ ...form, listingImage: e.target.value })}
+			/>
+
+			<Textarea
+				placeholder={`Gallery images (one per line)
+Example:
+/rooms/colombo/deluxe-1.jpg
+/rooms/colombo/deluxe-2.jpg`}
+				value={form.galleryImages}
+				onChange={(e) => setForm({ ...form, galleryImages: e.target.value })}
 			/>
 
 			<Button onClick={submit} className="w-full">

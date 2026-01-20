@@ -72,12 +72,15 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 			description: form.description.trim(),
 			amenities: form.amenities
 				.split(",")
-				.map((a: string) => a.trim())
+				.map((a) => a.trim())
 				.filter(Boolean),
+
+			// ✅ FIX: images is now string[]
 			images: form.images
 				.split(",")
-				.map((i: string) => i.trim())
+				.map((i) => i.trim())
 				.filter(Boolean),
+
 			coordinates: {
 				lat: Number(form.lat),
 				lng: Number(form.lng),
@@ -95,11 +98,8 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 		} catch (err: unknown) {
 			if (typeof err === "object" && err !== null && "response" in err) {
 				// @ts-expect-error axios error shape
-				console.error("Hotel save failed:", err.response?.data);
-				// @ts-expect-error axios error shape
 				alert(err.response?.data?.message || "Failed to save hotel");
 			} else {
-				console.error("Hotel save failed:", err);
 				alert("Failed to save hotel");
 			}
 		} finally {
@@ -123,15 +123,13 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 				<Label>Location *</Label>
 				<Select
 					value={form.location}
-					onValueChange={(value: string) =>
-						setForm({ ...form, location: value })
-					}
+					onValueChange={(value) => setForm({ ...form, location: value })}
 				>
 					<SelectTrigger>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						{LOCATIONS.map((loc: string) => (
+						{LOCATIONS.map((loc) => (
 							<SelectItem key={loc} value={loc}>
 								{loc}
 							</SelectItem>
@@ -146,7 +144,6 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 					<Input
 						type="number"
 						step="any"
-						placeholder="6.9271"
 						value={form.lat}
 						onChange={(e) => setForm({ ...form, lat: e.target.value })}
 					/>
@@ -157,7 +154,6 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 					<Input
 						type="number"
 						step="any"
-						placeholder="79.8612"
 						value={form.lng}
 						onChange={(e) => setForm({ ...form, lng: e.target.value })}
 					/>
@@ -182,9 +178,28 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 			</div>
 
 			<div>
-				<Label>Images (comma separated URLs)</Label>
+				<Label>Images (ordered, comma separated)</Label>
+
+				<p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+					Image order matters:
+					<br />
+					<strong>1st</strong> → Hero image
+					<br />
+					<strong>2nd</strong> → Hotel card image
+					<br />
+					<strong>3rd+</strong> → Gallery images
+					<br />
+					<br />
+					Example:
+					<br />
+					<code className="block mt-1 text-xs">
+						/hotels/colombo/hero.jpg, /hotels/colombo/card.jpg,
+						/hotels/colombo/gallery-1.jpg
+					</code>
+				</p>
+
 				<Input
-					placeholder="https://image1.jpg, https://image2.jpg"
+					placeholder="/hotels/colombo/hero.jpg, /hotels/colombo/card.jpg, /hotels/colombo/gallery-1.jpg"
 					value={form.images}
 					onChange={(e) => setForm({ ...form, images: e.target.value })}
 				/>

@@ -1,3 +1,5 @@
+import axios, { type InternalAxiosRequestConfig } from "axios";
+
 const API_BASE_URL =
 	process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -18,6 +20,28 @@ export async function loginUser(email: string, password: string) {
 	return res.json();
 }
 
+/* ---------------- AXIOS INSTANCE ---------------- */
+
+export const api = axios.create({
+	baseURL: API_BASE_URL,
+});
+
+api.interceptors.request.use(
+	(config: InternalAxiosRequestConfig) => {
+		if (typeof window !== "undefined") {
+			const token = localStorage.getItem("token");
+
+			if (token) {
+				// Axios v1+ guarantees headers object
+				config.headers.Authorization = `Bearer ${token}`;
+			}
+		}
+
+		return config;
+	},
+	(error) => Promise.reject(error),
+);
+
 /* ---------------- HOTELS ---------------- */
 
 export async function fetchHotels() {
@@ -32,17 +56,10 @@ export async function fetchHotels() {
 	return res.json();
 }
 
-export async function fetchHotel(id: string) {
+export async function fetchHotelById(id: string) {
 	const res = await fetch(`${API_BASE_URL}/hotels/${id}`, {
 		cache: "no-store",
 	});
-
-	if (!res.ok) return null;
-	return res.json();
-}
-
-export async function fetchHotelById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/hotels/${id}`);
 
 	if (!res.ok) {
 		throw new Error("Hotel not found");
@@ -53,13 +70,25 @@ export async function fetchHotelById(id: string) {
 
 /* ---------------- ROOMS ---------------- */
 
-export async function fetchRoom(id: string) {
-	const res = await fetch(`http://localhost:4000/api/rooms/${id}`, {
+export async function fetchRoomById(id: string) {
+	const res = await fetch(`${API_BASE_URL}/rooms/${id}`, {
 		cache: "no-store",
 	});
 
 	if (!res.ok) {
-		return null;
+		throw new Error("Room not found");
+	}
+
+	return res.json();
+}
+
+export async function fetchRoomsByHotel(hotelId: string) {
+	const res = await fetch(`${API_BASE_URL}/rooms?hotel=${hotelId}`, {
+		cache: "no-store",
+	});
+
+	if (!res.ok) {
+		throw new Error("Failed to fetch rooms");
 	}
 
 	return res.json();

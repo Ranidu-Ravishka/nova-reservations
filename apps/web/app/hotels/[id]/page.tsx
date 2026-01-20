@@ -5,25 +5,37 @@ import {
 	HotelHeroSection,
 	HotelOverviewSection,
 } from "@/components/sections/hotels";
-import { fetchHotelById } from "@/lib/api";
+import { fetchHotelById, fetchRoomsByHotel } from "@/lib/api";
+import { HotelRoomsSection } from "@/components/sections/hotels/hotel-rooms-section";
 
 export default async function HotelPage({
 	params,
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	// ✅ unwrap params
 	const { id } = await params;
 
 	const hotel = await fetchHotelById(id);
+	if (!hotel) notFound();
 
-	if (!hotel) {
-		notFound();
-	}
+	const rooms = await fetchRoomsByHotel(id);
+
+	const images = [
+		...(hotel.images?.shared || []),
+		...(hotel.images?.unique || []),
+	];
 
 	return (
 		<>
-			<HotelHeroSection hotel={hotel} />
+			<HotelHeroSection
+				hotel={{
+					id: hotel._id,
+					name: hotel.name,
+					description: hotel.description,
+					location: hotel.location,
+					images: hotel.images,
+				}}
+			/>
 
 			<HotelOverviewSection
 				hotel={{
@@ -36,7 +48,13 @@ export default async function HotelPage({
 
 			<HotelAmenitiesSection amenities={hotel.amenities} />
 
-			<HotelGallerySection images={hotel.images} hotelName={hotel.name} />
+			<HotelRoomsSection
+				hotelId={hotel._id}
+				hotelName={hotel.name}
+				rooms={rooms}
+			/>
+
+			<HotelGallerySection images={images} hotelName={hotel.name} />
 		</>
 	);
 }

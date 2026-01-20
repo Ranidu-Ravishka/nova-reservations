@@ -1,5 +1,5 @@
 "use client";
-
+import { ImageSet } from "@/types/images";
 import { motion } from "framer-motion";
 import {
 	ArrowRight,
@@ -21,64 +21,65 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 
-/* ---------------- TYPES ---------------- */
+/* ---------------- TYPES (MATCH API) ---------------- */
 
 interface Room {
 	_id: string;
 	name: string;
 	description: string;
-	basePrice: number;
-	maxGuests: number;
-	size: string;
-	amenities: string[];
-	image?: string;
-	hotel: string;
+	pricePerNight: number;
+	occupancy?: number;
+	size?: string;
+	images: ImageSet;
+	hotelId: string;
 }
 
 /* ---------------- COMPONENT ---------------- */
 
 export function RoomsListingSection() {
 	const searchParams = useSearchParams();
-	const hotelParam = searchParams.get("hotel");
+	const hotelId = searchParams.get("hotel");
 
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	const [priceRange, setPriceRange] = useState<[number, number]>([0, 1500]);
+	const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
 	const [capacity, setCapacity] = useState("all");
 	const [showFilters, setShowFilters] = useState(false);
 
 	/* ---------------- FETCH ROOMS ---------------- */
 
 	useEffect(() => {
+		setLoading(true);
+
 		const url = new URL("http://localhost:4000/api/rooms");
 
-		if (hotelParam) {
-			url.searchParams.set("hotel", hotelParam);
+		if (hotelId) {
+			url.searchParams.set("hotelId", hotelId); // ✅ FIXED
 		}
 
 		fetch(url.toString())
 			.then((res) => res.json())
 			.then(setRooms)
 			.finally(() => setLoading(false));
-	}, [hotelParam]);
+	}, [hotelId]);
 
-	/* ---------------- FILTER LOGIC ---------------- */
+	/* ---------------- FILTER ---------------- */
 
 	const filteredRooms = rooms.filter((room) => {
 		const matchesPrice =
-			room.basePrice >= priceRange[0] && room.basePrice <= priceRange[1];
+			room.pricePerNight >= priceRange[0] &&
+			room.pricePerNight <= priceRange[1];
 
 		const matchesCapacity =
-			capacity === "all" || room.maxGuests >= Number(capacity);
+			capacity === "all" ||
+			(room.occupancy && room.occupancy >= Number(capacity));
 
 		return matchesPrice && matchesCapacity;
 	});
 
-	/* ---------------- LOADING ---------------- */
-
 	if (loading) {
-		return <div className="p-10 text-gray-600">Loading rooms…</div>;
+		return <div className="p-10 text-charcoal/60">Loading rooms…</div>;
 	}
 
 	/* ---------------- UI ---------------- */
@@ -110,7 +111,7 @@ export function RoomsListingSection() {
 			{/* Content */}
 			<section className="py-16 bg-cream">
 				<div className="mx-auto max-w-7xl px-6">
-					{/* Filters */}
+					{/* Header */}
 					<div className="flex justify-between mb-10">
 						<p className="text-charcoal/60">
 							Showing {filteredRooms.length} room
@@ -126,89 +127,63 @@ export function RoomsListingSection() {
 						</Button>
 					</div>
 
-					{/* Mobile Filters */}
-					{showFilters && (
-						<div className="md:hidden bg-card rounded-xl p-6 mb-8">
-							<div className="flex justify-between mb-4">
-								<h3 className="font-semibold">Filters</h3>
-								<Button
-									size="icon"
-									variant="ghost"
-									onClick={() => setShowFilters(false)}
-								>
-									<X className="w-4 h-4" />
-								</Button>
-							</div>
-
-							<Select value={capacity} onValueChange={setCapacity}>
-								<SelectTrigger>
-									<SelectValue placeholder="Guests" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">Any</SelectItem>
-									<SelectItem value="2">2+</SelectItem>
-									<SelectItem value="3">3+</SelectItem>
-									<SelectItem value="4">4+</SelectItem>
-								</SelectContent>
-							</Select>
-
-							<div className="mt-6">
-								<Slider
-									value={priceRange}
-									onValueChange={(v) => setPriceRange(v as [number, number])}
-									min={0}
-									max={1500}
-									step={50}
-								/>
-							</div>
-						</div>
-					)}
-
 					{/* Rooms Grid */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-						{filteredRooms.map((room, index) => (
-							<motion.div
-								key={room._id}
-								initial={{ opacity: 0, y: 30 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								transition={{ delay: index * 0.05 }}
-							>
-								<Link
-									href={`/rooms/${room._id}${hotelParam ? `?hotel=${hotelParam}` : ""}`}
+					{filteredRooms.length === 0 ? (
+						<div className="text-center text-charcoal/60 py-20">
+							No rooms available.
+						</div>
+					) : (
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+							{filteredRooms.map((room, index) => (
+								<motion.div
+									key={room._id}
+									initial={{ opacity: 0, y: 30 }}
+									whileInView={{ opacity: 1, y: 0 }}
+									transition={{ delay: index * 0.05 }}
 								>
-									<div className="bg-card rounded-2xl overflow-hidden shadow hover:shadow-lg">
-										<img
-											src={room.image || "/placeholder.svg"}
-											alt={room.name}
-											className="h-64 w-full object-cover"
-										/>
+									<Link href={`/rooms/${room._id}`}>
+										<div className="bg-card rounded-2xl overflow-hidden shadow hover:shadow-lg">
+											<img
+												src={
+													room.images?.listing ||
+													room.images?.hero ||
+													"/placeholder.svg"
+												}
+												alt={room.name}
+												className="h-64 w-full object-cover"
+											/>
 
-										<div className="p-6">
-											<h3 className="text-2xl font-serif">{room.name}</h3>
-											<p className="text-charcoal/60 mt-2">
-												{room.description}
-											</p>
+											<div className="p-6">
+												<h3 className="text-2xl font-serif">{room.name}</h3>
+												<p className="text-charcoal/60 mt-2">
+													{room.description}
+												</p>
 
-											<div className="flex gap-6 text-sm mt-4 text-charcoal/50">
-												<span className="flex gap-2">
-													<Users className="w-4 h-4" />
-													{room.maxGuests} Guests
-												</span>
-												<span className="flex gap-2">
-													<Maximize className="w-4 h-4" />
-													{room.size}
-												</span>
-											</div>
+												<div className="flex gap-6 text-sm mt-4 text-charcoal/50">
+													{room.occupancy && (
+														<span className="flex gap-2">
+															<Users className="w-4 h-4" />
+															{room.occupancy} Guests
+														</span>
+													)}
+													{room.size && (
+														<span className="flex gap-2">
+															<Maximize className="w-4 h-4" />
+															{room.size}
+														</span>
+													)}
+												</div>
 
-											<div className="mt-4 text-gold font-medium flex items-center gap-2">
-												View Details <ArrowRight className="w-5 h-5" />
+												<div className="mt-4 text-gold font-medium flex items-center gap-2">
+													View Details <ArrowRight className="w-5 h-5" />
+												</div>
 											</div>
 										</div>
-									</div>
-								</Link>
-							</motion.div>
-						))}
-					</div>
+									</Link>
+								</motion.div>
+							))}
+						</div>
+					)}
 				</div>
 			</section>
 		</>

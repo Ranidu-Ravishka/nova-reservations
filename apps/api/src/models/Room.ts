@@ -21,8 +21,12 @@ const RoomSchema = new Schema(
 		},
 
 		images: {
-			type: [String],
-			default: [],
+			hero: { type: String },
+			listing: { type: String },
+			gallery: {
+				type: [String],
+				default: [],
+			},
 		},
 
 		isAvailable: {

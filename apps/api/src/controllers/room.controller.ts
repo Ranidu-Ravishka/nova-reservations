@@ -13,7 +13,8 @@ export const createRoom = async (req: Request, res: Response) => {
 
 export const getRooms = async (req: Request, res: Response) => {
 	const filter = req.query.hotelId ? { hotelId: req.query.hotelId } : {};
-	const rooms = await Room.find(filter);
+
+	const rooms = await Room.find(filter).populate("hotelId", "name");
 	res.json(rooms);
 };
 
