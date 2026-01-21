@@ -42,7 +42,7 @@ export const getDashboardStats = async (_req: Request, res: Response) => {
 			activeReservations,
 			monthlyRevenue,
 		});
-	} catch (error) {
+	} catch {
 		res.status(500).json({ message: "Failed to load dashboard stats" });
 	}
 };

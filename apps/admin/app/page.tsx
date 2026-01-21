@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 
 export default function AdminLogin() {
 	const router = useRouter();
@@ -11,7 +11,7 @@ export default function AdminLogin() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	async function handleLogin(e: React.FormEvent) {
+	async function handleLogin(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setError("");
 		setLoading(true);
@@ -43,8 +43,10 @@ export default function AdminLogin() {
 
 			// ✅ Redirect to dashboard
 			router.push("/dashboard");
-		} catch (err: any) {
-			setError(err.message || "Something went wrong");
+		} catch (err: unknown) {
+			const message =
+				err instanceof Error ? err.message : "Something went wrong";
+			setError(message);
 		} finally {
 			setLoading(false);
 		}
