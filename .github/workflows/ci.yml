@@ -22,37 +22,11 @@ env:
 
 jobs:
   # --------------------------------
-  # Biome Check (Format + Lint)
+  # Format Check
   # --------------------------------
-  biome:
-    name: Biome Check
+  format:
+    name: Format Check
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Biome (lint + format)
-        run: pnpm exec biome check .
-
-  # --------------------------------
-  # TypeScript Type Check
-  # --------------------------------
-  typecheck:
-    name: TypeScript Type Check
-    runs-on: ubuntu-latest
-    needs: biome
 
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +38,47 @@ jobs:
       - uses: pnpm/action-setup@v4
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run typecheck
+      - run: pnpm format
+
+  # --------------------------------
+  # Lint
+  # --------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: format
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  # --------------------------------
+  # TypeScript Type Check
+  # --------------------------------
+  typecheck:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
 
   # --------------------------------
   # Build Web App
@@ -72,7 +86,7 @@ jobs:
   build_web:
     name: Build Web App
     runs-on: ubuntu-latest
-    needs: [biome, typecheck]
+    needs: typecheck
 
     steps:
       - uses: actions/checkout@v4
@@ -101,7 +115,7 @@ jobs:
   build_admin:
     name: Build Admin App
     runs-on: ubuntu-latest
-    needs: [biome, typecheck]
+    needs: typecheck
 
     steps:
       - uses: actions/checkout@v4
@@ -130,7 +144,7 @@ jobs:
   build_api:
     name: Build API
     runs-on: ubuntu-latest
-    needs: [biome, typecheck]
+    needs: typecheck
 
     steps:
       - uses: actions/checkout@v4
