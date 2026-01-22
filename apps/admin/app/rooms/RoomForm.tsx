@@ -1,155 +1,217 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DialogTitle } from "@/components/ui/dialog";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import type { Room, RoomType } from "@/types/room";
 
 type Hotel = {
-	_id: string;
-	name: string;
+  _id: string;
+  name: string;
+};
+
+/* ---------------- FORM STATE TYPE ---------------- */
+
+type RoomFormState = {
+  name: string;
+  type: RoomType;
+  description: string;
+  hotelId: string;
+  totalRooms: string;
+  capacity: string;
+  size: string;
+  pricePerNight: string;
+  amenities: string;
+  heroImage: string;
+  listingImage: string;
+  galleryImages: string;
 };
 
 export default function RoomForm({
-	room,
-	onSuccess,
+  room,
+  onSuccess,
 }: {
-	room?: any;
-	onSuccess: () => void;
+  room?: Room;
+  onSuccess: () => void;
 }) {
-	const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
 
-	const [form, setForm] = useState({
-		name: room?.name || "",
-		description: room?.description || "",
-		hotelId: room?.hotelId?._id || "",
-		pricePerNight: room?.pricePerNight || "",
-		occupancy: room?.occupancy || "",
-		size: room?.size || "",
+  /* ---------------- FORM STATE ---------------- */
 
-		heroImage: room?.images?.hero || "",
-		listingImage: room?.images?.listing || "",
-		galleryImages: room?.images?.gallery?.join("\n") || "",
-	});
+  const [form, setForm] = useState<RoomFormState>({
+    name: room?.name ?? "",
+    type: room?.type ?? "DELUXE",
+    description: room?.description ?? "",
+    hotelId:
+      typeof room?.hotelId === "string"
+        ? room.hotelId
+        : room?.hotelId?._id ?? "",
+    totalRooms: room?.totalRooms?.toString() ?? "1",
+    capacity: room?.capacity?.toString() ?? "1",
+    size: room?.size ?? "",
+    pricePerNight: room?.pricePerNight?.toString() ?? "",
+    amenities: room?.amenities?.join(", ") ?? "",
+    heroImage: room?.images?.hero ?? "",
+    listingImage: room?.images?.listing ?? "",
+    galleryImages: room?.images?.gallery?.join("\n") ?? "",
+  });
 
-	useEffect(() => {
-		api.get("/hotels").then((res) => setHotels(res.data));
-	}, []);
+  /* ---------------- LOAD HOTELS ---------------- */
 
-	const submit = async () => {
-		const payload = {
-			name: form.name,
-			description: form.description,
-			hotelId: form.hotelId,
-			pricePerNight: Number(form.pricePerNight),
-			occupancy: Number(form.occupancy),
-			size: form.size,
+  useEffect(() => {
+    api.get("/hotels").then((res) => setHotels(res.data));
+  }, []);
 
-			images: {
-				hero: form.heroImage || undefined,
-				listing: form.listingImage || undefined,
-				gallery: form.galleryImages
-					.split("\n")
-					.map((i: string) => i.trim())
-					.filter(Boolean),
-			},
-		};
+  /* ---------------- INPUT HANDLER ---------------- */
 
-		if (room) {
-			await api.put(`/rooms/${room._id}`, payload);
-		} else {
-			await api.post("/rooms", payload);
-		}
+  const onInput =
+    (key: keyof RoomFormState) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setForm({ ...form, [key]: e.target.value });
+    };
 
-		onSuccess();
-	};
+  /* ---------------- SUBMIT ---------------- */
 
-	return (
-		<div className="space-y-4">
-			<DialogTitle>{room ? "Edit Room" : "Add Room"}</DialogTitle>
+  const submit = async () => {
+    const payload = {
+      name: form.name,
+      type: form.type,
+      description: form.description,
+      hotelId: form.hotelId,
+      totalRooms: Number(form.totalRooms),
+      capacity: Number(form.capacity),
+      size: form.size,
+      pricePerNight: Number(form.pricePerNight),
+      amenities: form.amenities
+        .split(",")
+        .map((a: string) => a.trim())
+        .filter(Boolean),
+      images: {
+        hero: form.heroImage || undefined,
+        listing: form.listingImage || undefined,
+        gallery: form.galleryImages
+          .split("\n")
+          .map((g: string) => g.trim())
+          .filter(Boolean),
+      },
+    };
 
-			<Input
-				placeholder="Room Name"
-				value={form.name}
-				onChange={(e) => setForm({ ...form, name: e.target.value })}
-			/>
+    if (room?._id) {
+      await api.put(`/rooms/${room._id}`, payload);
+    } else {
+      await api.post("/rooms", payload);
+    }
 
-			<Textarea
-				placeholder="Room description"
-				value={form.description}
-				onChange={(e) => setForm({ ...form, description: e.target.value })}
-			/>
+    onSuccess();
+  };
 
-			<Select
-				value={form.hotelId}
-				onValueChange={(v) => setForm({ ...form, hotelId: v })}
-			>
-				<SelectTrigger>
-					<SelectValue placeholder="Select Hotel" />
-				</SelectTrigger>
-				<SelectContent>
-					{hotels.map((h) => (
-						<SelectItem key={h._id} value={h._id}>
-							{h.name}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Room name"
+        value={form.name}
+        onChange={onInput("name")}
+      />
 
-			<Input
-				type="number"
-				placeholder="Price per night"
-				value={form.pricePerNight}
-				onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })}
-			/>
+      {/* ROOM TYPE */}
+      <Select
+        value={form.type}
+        onValueChange={(value: RoomType) =>
+          setForm({ ...form, type: value })
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Room type" />
+        </SelectTrigger>
+        <SelectContent>
+          {["DELUXE", "PREMIUM", "PRESIDENTIAL", "SUITE"].map((t) => (
+            <SelectItem key={t} value={t}>
+              {t}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-			<Input
-				type="number"
-				placeholder="Max guests"
-				value={form.occupancy}
-				onChange={(e) => setForm({ ...form, occupancy: e.target.value })}
-			/>
+      <Textarea
+        placeholder="Description"
+        value={form.description}
+        onChange={onInput("description")}
+      />
 
-			<Input
-				placeholder="Room size (e.g. 450 sqft)"
-				value={form.size}
-				onChange={(e) => setForm({ ...form, size: e.target.value })}
-			/>
+      {/* HOTEL */}
+      <Select
+        value={form.hotelId}
+        onValueChange={(value) =>
+          setForm({ ...form, hotelId: value })
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select hotel" />
+        </SelectTrigger>
+        <SelectContent>
+          {hotels.map((h) => (
+            <SelectItem key={h._id} value={h._id}>
+              {h.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-			{/* IMAGE FIELDS */}
-			<Input
-				placeholder="Hero image path (used on room page top)"
-				value={form.heroImage}
-				onChange={(e) => setForm({ ...form, heroImage: e.target.value })}
-			/>
+      <Input
+        type="number"
+        placeholder="Total rooms"
+        value={form.totalRooms}
+        onChange={onInput("totalRooms")}
+      />
 
-			<Input
-				placeholder="Listing image path (used on cards)"
-				value={form.listingImage}
-				onChange={(e) => setForm({ ...form, listingImage: e.target.value })}
-			/>
+      <Input
+        type="number"
+        placeholder="Capacity per room"
+        value={form.capacity}
+        onChange={onInput("capacity")}
+      />
 
-			<Textarea
-				placeholder={`Gallery images (one per line)
-Example:
-/rooms/colombo/deluxe-1.jpg
-/rooms/colombo/deluxe-2.jpg`}
-				value={form.galleryImages}
-				onChange={(e) => setForm({ ...form, galleryImages: e.target.value })}
-			/>
+      <Input
+        type="number"
+        placeholder="Price per night"
+        value={form.pricePerNight}
+        onChange={onInput("pricePerNight")}
+      />
 
-			<Button onClick={submit} className="w-full">
-				Save Room
-			</Button>
-		</div>
-	);
+      <Input
+        placeholder="Size (e.g. 40 m²)"
+        value={form.size}
+        onChange={onInput("size")}
+      />
+
+      <Input
+        placeholder="Hero image URL"
+        value={form.heroImage}
+        onChange={onInput("heroImage")}
+      />
+
+      <Input
+        placeholder="Listing image URL"
+        value={form.listingImage}
+        onChange={onInput("listingImage")}
+      />
+
+      <Textarea
+        placeholder="Gallery images (one per line)"
+        value={form.galleryImages}
+        onChange={onInput("galleryImages")}
+      />
+
+      <Button onClick={submit}>Save Room</Button>
+    </div>
+  );
 }

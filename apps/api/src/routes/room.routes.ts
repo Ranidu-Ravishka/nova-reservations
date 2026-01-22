@@ -11,12 +11,13 @@ import { authorize } from "../middlewares/role.middleware";
 
 const router = Router();
 
-/* ---------------- PUBLIC ---------------- */
-
-router.get("/", getRooms); // ?hotelId=
+router.post("/", createRoom);
+router.get("/", getRooms);
 router.get("/:id", getRoomById);
-
-router.post("/", authenticate, authorize("ADMIN"), createRoom);
-router.put("/:id", authenticate, authorize("ADMIN"), updateRoom);
+router.put("/:id", updateRoom);
+router.delete("/:id", deleteRoom);
+router.post("/", authenticate, authorize("ADMIN", "STAFF"), createRoom);
+router.put("/:id", authenticate, authorize("ADMIN", "STAFF"), updateRoom);
 router.delete("/:id", authenticate, authorize("ADMIN"), deleteRoom);
+
 export default router;

@@ -1,23 +1,33 @@
 import type { Request, Response } from "express";
-import { Reservation } from "../models/Reservation";
+import { Room } from "../models/Room";
+import { countOverlappingReservations } from "../services/availability.service";
 
-export const getRoomAvailability = async (req: Request, res: Response) => {
-	const { roomId } = req.params;
+export const checkAvailability = async (
+  req: Request,
+  res: Response,
+) => {
+  const { roomTypeId, checkIn, checkOut } = req.body as {
+    roomTypeId: string;
+    checkIn: string;
+    checkOut: string;
+  };
 
-	const reservations = await Reservation.find({
-		roomId,
-		status: "CONFIRMED",
-	}).select("checkIn checkOut");
+  if (!roomTypeId || !checkIn || !checkOut) {
+    return res.status(400).json({ message: "Missing booking data" });
+  }
 
-	res.json(reservations);
-};
+  const room = await Room.findById(roomTypeId);
+  if (!room) {
+    return res.status(404).json({ message: "Room not found" });
+  }
 
-export const cancelReservation = async (req: Request, res: Response) => {
-	const reservation = await Reservation.findByIdAndUpdate(
-		req.params.id,
-		{ status: "CANCELLED" },
-		{ new: true },
-	);
+  const booked = await countOverlappingReservations(
+    room._id.toString(),
+    new Date(checkIn),
+    new Date(checkOut),
+  );
 
-	res.json(reservation);
+  res.json({
+    availableRooms: room.totalRooms - booked,
+  });
 };

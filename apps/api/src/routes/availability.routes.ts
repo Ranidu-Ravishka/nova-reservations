@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getRoomAvailability } from "../controllers/availability.controller";
+import { checkAvailability } from "../controllers/availability.controller";
 
 const router = Router();
 
-router.get("/:roomId", getRoomAvailability);
+router.post("/check", checkAvailability);
 
 export default router;

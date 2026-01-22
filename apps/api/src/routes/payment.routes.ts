@@ -1,9 +1,18 @@
 import { Router } from "express";
-import { createPayment, getPayments } from "../controllers/payment.controller";
+import {
+  createPayment,
+  executePayment,
+  getPayments,
+} from "../controllers/payment.controller";
+import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.post("/", createPayment);
-router.get("/", getPayments);
+/* ---------------- USER ROUTES ---------------- */
+router.post("/", authenticate, createPayment);       // create payment
+router.post("/execute", authenticate, executePayment); // execute payment
+
+/* ---------------- ADMIN ROUTES ---------------- */
+router.get("/", getPayments); // optionally, add admin auth here
 
 export default router;
