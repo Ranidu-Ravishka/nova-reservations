@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { api } from "@/lib/api";
 
 /* ---------------- TYPES ---------------- */
 
@@ -47,16 +48,9 @@ export default function Dashboard() {
 			return;
 		}
 
-		fetch("http://localhost:4000/api/admin/dashboard", {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		})
-			.then((res) => {
-				if (!res.ok) throw new Error("Unauthorized");
-				return res.json();
-			})
-			.then(setStats)
+		api
+			.get("/admin/dashboard")
+			.then((res) => setStats(res.data as Stats))
 			.catch(() => {
 				localStorage.removeItem("admin_token");
 				router.replace("/");

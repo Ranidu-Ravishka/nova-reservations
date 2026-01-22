@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Roles } from "../constants/roles";
 import {
 	createHotel,
 	deleteHotel,
@@ -14,8 +15,8 @@ const router = Router();
 router.get("/", getHotels);
 router.get("/:id", getHotelById);
 
-router.post("/", authenticate, authorize("ADMIN"), createHotel);
-router.put("/:id", authenticate, authorize("ADMIN"), updateHotel);
-router.delete("/:id", authenticate, authorize("ADMIN"), deleteHotel);
+router.post("/", authenticate, authorize(Roles.ADMIN), createHotel);
+router.put("/:id", authenticate, authorize(Roles.ADMIN), updateHotel);
+router.delete("/:id", authenticate, authorize(Roles.ADMIN), deleteHotel);
 
 export default router;

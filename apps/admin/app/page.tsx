@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
+import { Roles } from "@/lib/roles";
 
 export default function AdminLogin() {
 	const router = useRouter();
@@ -17,7 +19,7 @@ export default function AdminLogin() {
 		setLoading(true);
 
 		try {
-			const res = await fetch("http://localhost:4000/api/auth/login", {
+			const res = await fetch(`${API_BASE_URL}/auth/login`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -31,7 +33,7 @@ export default function AdminLogin() {
 				throw new Error(data.message || "Login failed");
 			}
 
-			if (data.role !== "ADMIN") {
+			if (data.role !== Roles.ADMIN) {
 				throw new Error("Access denied. Admins only.");
 			}
 
