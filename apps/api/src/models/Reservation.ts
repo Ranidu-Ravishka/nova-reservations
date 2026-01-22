@@ -37,11 +37,10 @@ const ReservationSchema = new Schema(
 		},
 
 		roomsBooked: {
-  type: Number,
-  required: true,
-  min: 1,
-},
-
+			type: Number,
+			required: true,
+			min: 1,
+		},
 
 		/* 📅 DATES */
 		checkIn: {

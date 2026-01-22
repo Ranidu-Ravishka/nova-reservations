@@ -1,42 +1,38 @@
-export type RoomType =
-  | "DELUXE"
-  | "PREMIUM"
-  | "PRESIDENTIAL"
-  | "SUITE";
+export type RoomType = "DELUXE" | "PREMIUM" | "PRESIDENTIAL" | "SUITE";
 
 export type RoomImages = {
-  hero?: string;
-  listing?: string;
-  gallery?: string[];
+	hero?: string;
+	listing?: string;
+	gallery?: string[];
 };
 
 export type Room = {
-  _id: string;
+	_id: string;
 
-  name: string;
-  type: RoomType;
+	name: string;
+	type: RoomType;
 
-  description?: string;
+	description?: string;
 
-  hotelId:
-    | string
-    | {
-        _id: string;
-        name: string;
-      };
+	hotelId:
+		| string
+		| {
+				_id: string;
+				name: string;
+		  };
 
-  totalRooms: number;
-  capacity: number;
-  size?: string;
+	totalRooms: number;
+	capacity: number;
+	size?: string;
 
-  pricePerNight: number;
+	pricePerNight: number;
 
-  amenities: string[];
+	amenities: string[];
 
-  images?: RoomImages;
+	images?: RoomImages;
 
-  isActive: boolean;
+	isActive: boolean;
 
-  createdAt?: string;
-  updatedAt?: string;
+	createdAt?: string;
+	updatedAt?: string;
 };

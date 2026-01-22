@@ -86,7 +86,7 @@ export function HotelRoomsSection({
 								<div className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
 									{/* Image */}
 									<div className="relative aspect-4/3 overflow-hidden">
-										<img
+										<Image
 											src={room.images?.[0] || "/placeholder.svg"}
 											alt={room.name}
 											fill

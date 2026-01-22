@@ -68,23 +68,21 @@ export async function fetchHotelById(id: string) {
 /* ---------------- ROOMS ---------------- */
 
 export async function fetchRoomById(id: string) {
-  const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
-    cache: "no-store",
-  });
+	const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
+		cache: "no-store",
+	});
 
-  if (!res.ok) {
-    return null; // ✅ DO NOT THROW
-  }
+	if (!res.ok) {
+		return null; // ✅ DO NOT THROW
+	}
 
-  return res.json();
+	return res.json();
 }
 
-
 export async function fetchRoomsByHotel(hotelId: string) {
-	const res = await fetch(
-		`${API_BASE_URL}/api/rooms?hotelId=${hotelId}`,
-		{ cache: "no-store" }
-	);
+	const res = await fetch(`${API_BASE_URL}/api/rooms?hotelId=${hotelId}`, {
+		cache: "no-store",
+	});
 
 	if (!res.ok) {
 		throw new Error("Failed to fetch rooms");
@@ -107,10 +105,9 @@ export async function createReservation(payload: {
 }
 
 export async function fetchReservationById(id: string) {
-	const res = await fetch(
-		`${API_BASE_URL}/api/reservations/${id}`,
-		{ cache: "no-store" }
-	);
+	const res = await fetch(`${API_BASE_URL}/api/reservations/${id}`, {
+		cache: "no-store",
+	});
 
 	if (!res.ok) return null;
 	return res.json();

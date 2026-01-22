@@ -19,13 +19,13 @@ export function HotelHeroSection({ hotel }: HotelHeroProps) {
 	const heroImage = hotel.images?.[0] || "/placeholder.svg";
 
 	return (
-		<section className="relative h-[80vh] min-h-[600px] flex items-end overflow-hidden">
+		<section className="relative h-[80vh] min-h-150 flex items-end overflow-hidden">
 			{/* Background */}
 			<div
 				className="absolute inset-0 bg-cover bg-center"
 				style={{ backgroundImage: `url(${heroImage})` }}
 			>
-				<div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-charcoal/20" />
+				<div className="absolute inset-0 bg-linear-to-t from-charcoal via-charcoal/40 to-charcoal/20" />
 			</div>
 
 			{/* Content */}

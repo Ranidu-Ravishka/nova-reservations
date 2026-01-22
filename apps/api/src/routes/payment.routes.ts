@@ -1,15 +1,15 @@
 import { Router } from "express";
 import {
-  createPayment,
-  executePayment,
-  getPayments,
+	createPayment,
+	executePayment,
+	getPayments,
 } from "../controllers/payment.controller";
 import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
 
 /* ---------------- USER ROUTES ---------------- */
-router.post("/", authenticate, createPayment);       // create payment
+router.post("/", authenticate, createPayment); // create payment
 router.post("/execute", authenticate, executePayment); // execute payment
 
 /* ---------------- ADMIN ROUTES ---------------- */

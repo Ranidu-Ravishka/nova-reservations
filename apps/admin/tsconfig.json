@@ -1,42 +1,42 @@
 {
-  "extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.base.json",
 
-  "compilerOptions": {
-    /* Next.js */
-    "plugins": [{ "name": "next" }],
-    "jsx": "preserve",
+	"compilerOptions": {
+		/* Next.js */
+		"plugins": [{ "name": "next" }],
+		"jsx": "preserve",
 
-    /* Types */
-    "types": ["react", "react-dom", "node"],
+		/* Types */
+		"types": ["react", "react-dom", "node"],
 
-    /* Module resolution */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*", "./src/*"]
-    },
+		/* Module resolution */
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./*", "./src/*"]
+		},
 
-    /* Type safety */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "ignoreDeprecations": "5.0",
+		/* Type safety */
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"ignoreDeprecations": "5.0",
 
-    /* Build & DX */
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+		/* Build & DX */
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
 
-    /* Output */
-    "noEmit": true
-  },
+		/* Output */
+		"noEmit": true
+	},
 
-  "include": [
-    "next-env.d.ts",
-    "app",
-    "components",
-    "lib",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
+	"include": [
+		"next-env.d.ts",
+		"app",
+		"components",
+		"lib",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts"
+	],
 
-  "exclude": ["node_modules"]
+	"exclude": ["node_modules"]
 }

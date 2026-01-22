@@ -14,24 +14,22 @@ import staffRoutes from "./routes/staff.routes";
 import transportRoutes from "./routes/transport.routes";
 import userRoutes from "./routes/user.routes";
 
-
-
 const app = express();
 
 /* ---------------- CORS ---------------- */
 
 const ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",     // admin
-  "http://127.0.0.1:3001",    // admin
+	"http://localhost:3000",
+	"http://127.0.0.1:3000",
+	"http://localhost:3001", // admin
+	"http://127.0.0.1:3001", // admin
 ];
 
 app.use(
-  cors({
-    origin: ALLOWED_ORIGINS,
-    credentials: true,
-  }),
+	cors({
+		origin: ALLOWED_ORIGINS,
+		credentials: true,
+	}),
 );
 
 /* ---------------- MIDDLEWARE ---------------- */
@@ -56,17 +54,17 @@ app.use("/api/admin", adminRoutes);
 /* ---------------- HEALTH CHECK ---------------- */
 
 app.get("/", (_, res) => {
-  res.send("Nova Reservations API running 🚀");
+	res.send("Nova Reservations API running 🚀");
 });
 
 app.get("/api/health", (_, res) => {
-  res.json({ status: "ok" });
+	res.json({ status: "ok" });
 });
 
 /* ---------------- TEST ROUTES ---------------- */
 
 app.get("/api/payments-test", (_, res) => {
-  res.send("Payments route works");
+	res.send("Payments route works");
 });
 
 export default app;

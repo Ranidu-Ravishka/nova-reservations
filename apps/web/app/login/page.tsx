@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -68,9 +68,7 @@ export default function LoginPage() {
 				</p>
 
 				{error && (
-					<p className="mb-4 text-sm text-red-600 text-center">
-						{error}
-					</p>
+					<p className="mb-4 text-sm text-red-600 text-center">{error}</p>
 				)}
 
 				<form onSubmit={submit} className="space-y-5">
@@ -81,9 +79,7 @@ export default function LoginPage() {
 							required
 							placeholder="you@email.com"
 							value={form.email}
-							onChange={(e) =>
-								setForm({ ...form, email: e.target.value })
-							}
+							onChange={(e) => setForm({ ...form, email: e.target.value })}
 						/>
 					</div>
 
@@ -94,9 +90,7 @@ export default function LoginPage() {
 							required
 							placeholder="••••••••"
 							value={form.password}
-							onChange={(e) =>
-								setForm({ ...form, password: e.target.value })
-							}
+							onChange={(e) => setForm({ ...form, password: e.target.value })}
 						/>
 					</div>
 
@@ -112,9 +106,7 @@ export default function LoginPage() {
 				<p className="mt-6 text-center text-sm text-gray-600">
 					Don’t have an account?{" "}
 					<Link
-						href={`/register?redirect=${encodeURIComponent(
-							redirect,
-						)}`}
+						href={`/register?redirect=${encodeURIComponent(redirect)}`}
 						className="text-gold font-medium hover:underline"
 					>
 						Sign up
@@ -122,5 +114,19 @@ export default function LoginPage() {
 				</p>
 			</div>
 		</div>
+	);
+}
+
+export default function LoginPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="min-h-screen pt-24 flex items-center justify-center bg-charcoal">
+					<div className="text-white">Loading...</div>
+				</div>
+			}
+		>
+			<LoginContent />
+		</Suspense>
 	);
 }

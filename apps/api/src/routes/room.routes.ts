@@ -12,13 +12,15 @@ import { authorize } from "../middlewares/role.middleware";
 
 const router = Router();
 
-router.post("/", createRoom);
 router.get("/", getRooms);
 router.get("/:id", getRoomById);
-router.put("/:id", updateRoom);
-router.delete("/:id", deleteRoom);
-router.post("/", authenticate, authorize("ADMIN", "STAFF"), createRoom);
-router.put("/:id", authenticate, authorize("ADMIN", "STAFF"), updateRoom);
-router.delete("/:id", authenticate, authorize("ADMIN"), deleteRoom);
+router.post("/", authenticate, authorize(Roles.ADMIN, Roles.STAFF), createRoom);
+router.put(
+	"/:id",
+	authenticate,
+	authorize(Roles.ADMIN, Roles.STAFF),
+	updateRoom,
+);
+router.delete("/:id", authenticate, authorize(Roles.ADMIN), deleteRoom);
 
 export default router;

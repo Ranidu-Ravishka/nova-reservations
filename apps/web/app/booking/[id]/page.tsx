@@ -1,15 +1,15 @@
 import { notFound } from "next/navigation";
-import { fetchReservationById } from "@/lib/api";
 import BookingSummary from "@/components/booking/booking-summary";
+import { fetchReservationById } from "@/lib/api";
 
 export default async function BookingPage({
-  params,
+	params,
 }: {
-  params: { id: string };
+	params: { id: string };
 }) {
-  const reservation = await fetchReservationById(params.id);
+	const reservation = await fetchReservationById(params.id);
 
-  if (!reservation) notFound();
+	if (!reservation) notFound();
 
-  return <BookingSummary reservation={reservation} />;
+	return <BookingSummary reservation={reservation} />;
 }
