@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -6,8 +7,8 @@ import { User } from "../models/User";
 const router = Router();
 
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+	try {
+		const { email, password } = req.body;
 
     // 1️⃣ Validate input
     if (!email || !password) {
