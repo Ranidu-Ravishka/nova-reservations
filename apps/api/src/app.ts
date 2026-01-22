@@ -12,6 +12,7 @@ import reviewRoutes from "./routes/review.routes";
 import roomRoutes from "./routes/room.routes";
 import staffRoutes from "./routes/staff.routes";
 import transportRoutes from "./routes/transport.routes";
+import transportRequestRoutes from "./routes/transportRequest.routes";
 import userRoutes from "./routes/user.routes";
 
 const app = express();
@@ -41,6 +42,7 @@ app.use(express.json());
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/transports", transportRoutes);
+app.use("/api/transport-requests", transportRequestRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

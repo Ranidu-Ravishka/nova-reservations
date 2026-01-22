@@ -1,12 +1,14 @@
-export const metadata = {
+import type { Metadata } from "next";
+import { fetchTransports } from "@/lib/api";
+import TransportPageClient from "./TransportPageClient";
+
+export const metadata: Metadata = {
 	title: "Transport Services | Nova Reservations",
+	description:
+		"Premium private transport services: airport pickups, hotel transfers, and custom routes.",
 };
 
-export default function TransportPage() {
-	return (
-		<div style={{ padding: 40 }}>
-			<h1>Transport Services</h1>
-			<p>This page is under construction.</p>
-		</div>
-	);
+export default async function TransportPage() {
+	const transports = await fetchTransports();
+	return <TransportPageClient initialTransports={transports} />;
 }

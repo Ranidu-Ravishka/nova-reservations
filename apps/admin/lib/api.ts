@@ -41,8 +41,12 @@ api.interceptors.response.use(
 				// ignore
 			}
 
-			// redirect to admin login
-			window.location.assign("/");
+			// redirect to admin login (preserve return path)
+			const next =
+				window.location.pathname && window.location.pathname !== "/"
+					? `/?next=${encodeURIComponent(window.location.pathname)}`
+					: "/";
+			window.location.assign(next);
 		}
 
 		return Promise.reject(error);

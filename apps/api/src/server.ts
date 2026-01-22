@@ -1,38 +1,9 @@
 import "dotenv/config";
 import http from "node:http";
-import express from "express";
 import mongoose from "mongoose";
 import type { Socket } from "socket.io";
 import { Server } from "socket.io";
-import adminRoutes from "./routes/admin.routes";
-import authRoutes from "./routes/auth.routes";
-import availabilityRoutes from "./routes/availability.routes";
-import reservationRoutes from "./routes/reservation.routes";
-import roomRoutes from "./routes/room.routes";
-
-// ---------- EXPRESS APP ----------
-const app = express();
-app.use(express.json());
-app.use(
-	require("cors")({
-		origin: [
-			"http://localhost:3000",
-			"http://127.0.0.1:3000",
-			"http://localhost:3001",
-			"http://127.0.0.1:3001",
-		],
-		credentials: true,
-	}),
-);
-
-// ---------- ROUTES ----------
-app.use("/api/auth", authRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/rooms", roomRoutes);
-app.use("/api/reservations", reservationRoutes);
-app.use("/api/availability", availabilityRoutes);
+import app from "./app";
 
 // ---------- HTTP SERVER ----------
 const server = http.createServer(app);
