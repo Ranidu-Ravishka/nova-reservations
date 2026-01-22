@@ -1,6 +1,9 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
 import bcrypt from "bcryptjs";
 
+
+
+
 /* ---------- USER SCHEMA ---------- */
 const userSchema = new Schema(
   {
@@ -19,7 +22,7 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      select: false, // 👈 IMPORTANT for security
+      select: true, // 
     },
 
     role: {
@@ -54,3 +57,5 @@ export type User = InferSchemaType<typeof userSchema> & {
 
 /* ---------- MODEL ---------- */
 export const UserModel = model<User>("User", userSchema);
+
+export const User = model("User", userSchema);

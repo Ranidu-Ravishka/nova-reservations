@@ -7,8 +7,8 @@ import {
 	getHotels,
 	updateHotel,
 } from "../controllers/hotel.controller";
-import { authenticate } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/role.middleware";
+import { authenticate } from "../middleware/auth.middleware";
+import { authorize } from "../middleware/role.middleware";
 
 const router = Router();
 

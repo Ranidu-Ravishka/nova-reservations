@@ -4,7 +4,7 @@ import {
 	executePayment,
 	getPayments,
 } from "../controllers/payment.controller";
-import { authenticate } from "../middlewares/auth.middleware";
+import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 

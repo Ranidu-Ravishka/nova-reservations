@@ -7,20 +7,19 @@ import {
 	getRooms,
 	updateRoom,
 } from "../controllers/room.controller";
-import { authenticate } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/role.middleware";
+import { requireAuth } from "../middleware/auth.middleware";
+import { authorize } from "../middleware/role.middleware";
 
 const router = Router();
 
 router.get("/", getRooms);
 router.get("/:id", getRoomById);
-router.post("/", authenticate, authorize(Roles.ADMIN, Roles.STAFF), createRoom);
+router.post("/", requireAuth, authorize(Roles.ADMIN, Roles.STAFF), createRoom);
 router.put(
 	"/:id",
-	authenticate,
+	requireAuth,
 	authorize(Roles.ADMIN, Roles.STAFF),
 	updateRoom,
 );
-router.delete("/:id", authenticate, authorize(Roles.ADMIN), deleteRoom);
-
+router.delete("/:id", requireAuth, authorize(Roles.ADMIN), deleteRoom);
 export default router;

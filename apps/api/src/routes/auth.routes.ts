@@ -1,38 +1,45 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { UserModel } from "../models/User"; // adjust path if needed
+import jwt from "jsonwebtoken";
+import { User } from "../models/User";
 
 const router = Router();
 
-/**
- * POST /api/auth/login
- */
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 1️⃣ Validate input
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    const user = await UserModel.findOne({ email });
+    // 2️⃣ Find user
+    const user = await User.findOne({ email });
 
-    if (!user) {
+    if (!user || !user.password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
+    // 3️⃣ Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // 4️⃣ Create token
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET not set");
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1d" }
+      { id: user._id.toString(), role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
     );
 
+    // 5️⃣ Respond
     res.json({
       token,
       role: user.role,
