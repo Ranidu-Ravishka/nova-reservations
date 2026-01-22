@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, MapPin } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface Hotel {
@@ -32,11 +33,13 @@ export default function HotelsSection() {
 							transition={{ delay: i * 0.15 }}
 						>
 							<Link href={`/hotels/${hotel.id}`} className="group block">
-								<div className="relative rounded-xl overflow-hidden">
-									<img
+								<div className="relative rounded-xl overflow-hidden aspect-[16/10]">
+									<Image
 										src={hotel.image}
 										alt={hotel.name}
-										className="h-full w-full object-cover group-hover:scale-110 transition"
+										fill
+										sizes="(min-width: 768px) 50vw, 100vw"
+										className="object-cover group-hover:scale-110 transition"
 									/>
 									<div className="absolute inset-0 bg-black/50" />
 									<div className="absolute bottom-0 p-6 text-white">

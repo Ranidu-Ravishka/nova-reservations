@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ export default function LoginPage() {
 		password: "",
 	});
 
-	const submit = async (e: React.FormEvent) => {
+	const submit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
 		setLoading(true);
@@ -29,8 +30,15 @@ export default function LoginPage() {
 			localStorage.setItem("user", JSON.stringify(res.data.user));
 
 			router.push("/"); // redirect to home
-		} catch (err: any) {
-			setError(err.response?.data?.message || "Login failed");
+		} catch (err: unknown) {
+			if (axios.isAxiosError(err)) {
+				const data = err.response?.data as { message?: string } | undefined;
+				setError(data?.message || err.message || "Login failed");
+			} else if (err instanceof Error) {
+				setError(err.message);
+			} else {
+				setError("Login failed");
+			}
 		} finally {
 			setLoading(false);
 		}

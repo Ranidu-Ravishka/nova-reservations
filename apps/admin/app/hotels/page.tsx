@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit2, Loader2, MapPin, Plus, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,11 +40,11 @@ export default function HotelsPage() {
 	const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
-	const loadHotels = async () => {
+	const loadHotels = useCallback(async () => {
 		const res = await api.get<Hotel[]>("/hotels");
 		setHotels(res.data);
 		setLoading(false);
-	};
+	}, []);
 
 	useEffect(() => {
 		loadHotels();

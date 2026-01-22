@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Car, Plane, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -100,10 +101,12 @@ export default function TransportSection() {
 						className="relative"
 					>
 						<div className="relative overflow-hidden rounded-2xl aspect-[4/5]">
-							<img
+							<Image
 								src="/luxury-chauffeur-car-service-mercedes-black-sri-la.jpg"
 								alt="Luxury Transport"
-								className="w-full h-full object-cover"
+								fill
+								sizes="(min-width: 1024px) 50vw, 100vw"
+								className="object-cover"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 to-transparent" />
 						</div>

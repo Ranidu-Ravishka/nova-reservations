@@ -128,7 +128,13 @@ function Calendar({
 				...classNames,
 			}}
 			components={{
-				Root: ({ className, rootRef, ...props }) => {
+				Root: ({
+					className,
+					rootRef,
+					...props
+				}: React.ComponentPropsWithoutRef<"div"> & {
+					rootRef?: React.Ref<HTMLDivElement>;
+				}) => {
 					return (
 						<div
 							data-slot="calendar"
@@ -138,6 +144,7 @@ function Calendar({
 						/>
 					);
 				},
+				// eslint-disable-next-line react/prop-types
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === "left") {
 						return (

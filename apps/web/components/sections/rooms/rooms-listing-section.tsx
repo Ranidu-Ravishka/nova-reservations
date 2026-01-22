@@ -1,25 +1,13 @@
 "use client";
-import { ImageSet } from "@/types/images";
 import { motion } from "framer-motion";
-import {
-	ArrowRight,
-	Maximize,
-	SlidersHorizontal,
-	Users,
-	X,
-} from "lucide-react";
+import { ArrowRight, Maximize, SlidersHorizontal, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import type { ImageSet } from "@/types/images";
 
 /* ---------------- TYPES (MATCH API) ---------------- */
 
@@ -112,7 +100,7 @@ export function RoomsListingSection() {
 			<section className="py-16 bg-cream">
 				<div className="mx-auto max-w-7xl px-6">
 					{/* Header */}
-					<div className="flex justify-between mb-10">
+					<div className="flex justify-between mb-6">
 						<p className="text-charcoal/60">
 							Showing {filteredRooms.length} room
 							{filteredRooms.length !== 1 && "s"}
@@ -125,6 +113,57 @@ export function RoomsListingSection() {
 						>
 							<SlidersHorizontal className="w-4 h-4 mr-2" /> Filters
 						</Button>
+					</div>
+
+					{/* Filters */}
+					<div
+						className={`mb-10 ${
+							showFilters ? "grid" : "hidden"
+						} gap-6 rounded-2xl bg-card p-6 shadow md:grid md:grid-cols-2`}
+					>
+						<div>
+							<div className="flex items-baseline justify-between">
+								<h4 className="text-sm font-medium text-charcoal">
+									Price range
+								</h4>
+								<span className="text-sm text-charcoal/60">
+									{priceRange[0]} - {priceRange[1]}
+								</span>
+							</div>
+
+							<div className="mt-4">
+								<Slider
+									value={priceRange}
+									min={0}
+									max={2000}
+									step={50}
+									onValueChange={(value) => {
+										if (value.length === 2) {
+											const [min, max] = value;
+											if (min !== undefined && max !== undefined) {
+												setPriceRange([min, max]);
+											}
+										}
+									}}
+								/>
+							</div>
+						</div>
+
+						<div>
+							<h4 className="text-sm font-medium text-charcoal">Guests</h4>
+							<select
+								value={capacity}
+								onChange={(e) => setCapacity(e.target.value)}
+								className="mt-3 w-full rounded-md border border-charcoal/15 bg-cream px-3 py-2 text-sm text-charcoal"
+							>
+								<option value="all">Any</option>
+								<option value="1">1+ guests</option>
+								<option value="2">2+ guests</option>
+								<option value="3">3+ guests</option>
+								<option value="4">4+ guests</option>
+								<option value="5">5+ guests</option>
+							</select>
+						</div>
 					</div>
 
 					{/* Rooms Grid */}
@@ -143,15 +182,19 @@ export function RoomsListingSection() {
 								>
 									<Link href={`/rooms/${room._id}`}>
 										<div className="bg-card rounded-2xl overflow-hidden shadow hover:shadow-lg">
-											<img
-												src={
-													room.images?.listing ||
-													room.images?.hero ||
-													"/placeholder.svg"
-												}
-												alt={room.name}
-												className="h-64 w-full object-cover"
-											/>
+											<div className="relative h-64 w-full">
+												<Image
+													src={
+														room.images?.listing ||
+														room.images?.hero ||
+														"/placeholder.svg"
+													}
+													alt={room.name}
+													fill
+													sizes="(max-width: 768px) 100vw, 50vw"
+													className="object-cover"
+												/>
+											</div>
 
 											<div className="p-6">
 												<h3 className="text-2xl font-serif">{room.name}</h3>

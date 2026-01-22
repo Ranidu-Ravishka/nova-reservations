@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar, Percent } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -79,10 +80,12 @@ export default function OffersSection() {
 						>
 							<div className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
 								<div className="relative aspect-3/2 overflow-hidden">
-									<img
+									<Image
 										src={offer.image || "/placeholder.svg"}
 										alt={offer.title}
-										className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+										fill
+										sizes="(min-width: 768px) 33vw, 100vw"
+										className="object-cover transition-transform duration-700 group-hover:scale-110"
 									/>
 									<div className="absolute top-4 left-4 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
 										<Percent className="w-4 h-4" />

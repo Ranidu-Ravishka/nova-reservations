@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -82,23 +83,29 @@ export default function TestimonialsSection() {
 
 							{/* Rating */}
 							<div className="flex gap-1 mb-6">
-								{[...Array(testimonials[currentIndex]?.rating || 0)].map(
-									(_, i) => (
-										<Star key={i} className="w-5 h-5 fill-gold text-gold" />
-									),
-								)}
+								{Array.from(
+									{ length: testimonials[currentIndex]?.rating ?? 0 },
+									(_, n) => n + 1,
+								).map((starNumber) => (
+									<Star
+										key={`${testimonials[currentIndex]?.id ?? "testimonial"}-star-${starNumber}`}
+										className="w-5 h-5 fill-gold text-gold"
+									/>
+								))}
 							</div>
 
 							{/* Text */}
 							<p className="text-xl md:text-2xl text-charcoal/80 font-light leading-relaxed mb-8">
-								"{testimonials[currentIndex]?.text}"
+								&ldquo;{testimonials[currentIndex]?.text}&rdquo;
 							</p>
 
 							{/* Author */}
 							<div className="flex items-center gap-4">
-								<img
+								<Image
 									src={testimonials[currentIndex]?.image || "/placeholder.svg"}
-									alt={testimonials[currentIndex]?.name}
+									alt={testimonials[currentIndex]?.name ?? "Guest photo"}
+									width={56}
+									height={56}
 									className="w-14 h-14 rounded-full object-cover"
 								/>
 								<div>
@@ -125,9 +132,10 @@ export default function TestimonialsSection() {
 							<ChevronLeft className="w-5 h-5" />
 						</Button>
 						<div className="flex items-center gap-2">
-							{testimonials.map((_, index) => (
+							{testimonials.map((testimonial, index) => (
 								<button
-									key={index}
+									type="button"
+									key={testimonial.id}
 									onClick={() => setCurrentIndex(index)}
 									className={`w-2 h-2 rounded-full transition-all ${
 										index === currentIndex ? "bg-gold w-6" : "bg-charcoal/20"

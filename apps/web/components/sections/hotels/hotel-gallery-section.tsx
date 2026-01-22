@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -55,7 +56,7 @@ export function HotelGallerySection({
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 						{images.map((image, index) => (
 							<motion.div
-								key={index}
+								key={image}
 								initial={{ opacity: 0, scale: 0.95 }}
 								whileInView={{ opacity: 1, scale: 1 }}
 								viewport={{ once: true }}
@@ -66,12 +67,18 @@ export function HotelGallerySection({
 								onClick={() => openLightbox(index)}
 							>
 								<div
-									className={`${index === 0 ? "aspect-square" : "aspect-4/3"}`}
+									className={`relative ${index === 0 ? "aspect-square" : "aspect-4/3"}`}
 								>
-									<img
+									<Image
 										src={image || "/placeholder.svg"}
-										alt={`${hotelName} - Image ${index + 1}`}
-										className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+										alt={`${hotelName} - Gallery item ${index + 1}`}
+										fill
+										sizes={
+											index === 0
+												? "(min-width: 768px) 50vw, 100vw"
+												: "(min-width: 768px) 25vw, 50vw"
+										}
+										className="object-cover transition-transform duration-700 group-hover:scale-110"
 									/>
 								</div>
 								<div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/30 transition-colors flex items-center justify-center">
@@ -128,16 +135,23 @@ export function HotelGallerySection({
 							<ChevronRight className="w-8 h-8" />
 						</Button>
 
-						<motion.img
+						<motion.div
 							key={selectedImage}
 							initial={{ opacity: 0, scale: 0.9 }}
 							animate={{ opacity: 1, scale: 1 }}
 							exit={{ opacity: 0, scale: 0.9 }}
-							src={images[selectedImage] || "/placeholder.svg"}
-							alt={`${hotelName} - Image ${selectedImage + 1}`}
-							className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+							className="relative w-[90vw] h-[90vh]"
 							onClick={(e) => e.stopPropagation()}
-						/>
+						>
+							<Image
+								src={images[selectedImage] || "/placeholder.svg"}
+								alt={`${hotelName} - Gallery item ${selectedImage + 1}`}
+								fill
+								sizes="90vw"
+								className="object-contain rounded-lg"
+								priority
+							/>
+						</motion.div>
 
 						<div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-ivory/60 text-sm">
 							{selectedImage + 1} / {images.length}

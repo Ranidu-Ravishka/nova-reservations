@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -12,6 +11,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 
 type Hotel = {
@@ -19,26 +19,51 @@ type Hotel = {
 	name: string;
 };
 
+type RoomHotelRef = {
+	_id: string;
+	name?: string;
+};
+
+type Room = {
+	_id: string;
+	name?: string;
+	description?: string;
+	hotelId?: string | RoomHotelRef;
+	pricePerNight?: number;
+	occupancy?: number;
+	size?: string;
+	images?: {
+		hero?: string;
+		listing?: string;
+		gallery?: string[];
+	};
+};
+
 export default function RoomForm({
 	room,
 	onSuccess,
 }: {
-	room?: any;
+	room?: Room;
 	onSuccess: () => void;
 }) {
 	const [hotels, setHotels] = useState<Hotel[]>([]);
 
-	const [form, setForm] = useState({
-		name: room?.name || "",
-		description: room?.description || "",
-		hotelId: room?.hotelId?._id || "",
-		pricePerNight: room?.pricePerNight || "",
-		occupancy: room?.occupancy || "",
-		size: room?.size || "",
+	const initialHotelId =
+		typeof room?.hotelId === "string"
+			? room.hotelId
+			: (room?.hotelId?._id ?? "");
 
-		heroImage: room?.images?.hero || "",
-		listingImage: room?.images?.listing || "",
-		galleryImages: room?.images?.gallery?.join("\n") || "",
+	const [form, setForm] = useState({
+		name: room?.name ?? "",
+		description: room?.description ?? "",
+		hotelId: initialHotelId,
+		pricePerNight: room?.pricePerNight ?? "",
+		occupancy: room?.occupancy ?? "",
+		size: room?.size ?? "",
+
+		heroImage: room?.images?.hero ?? "",
+		listingImage: room?.images?.listing ?? "",
+		galleryImages: room?.images?.gallery?.join("\n") ?? "",
 	});
 
 	useEffect(() => {

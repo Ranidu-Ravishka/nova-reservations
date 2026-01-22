@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, MapPin } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -42,9 +43,11 @@ export function HotelsListingSection() {
 								<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 									{/* Image */}
 									<div className="overflow-hidden rounded-2xl">
-										<img
+										<Image
 											src={cardImage}
 											alt={hotel.name}
+											width={1200}
+											height={800}
 											className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
 										/>
 									</div>

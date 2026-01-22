@@ -1,8 +1,9 @@
 "use client";
 
-import { ImageSet } from "@/types/images";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import type { ImageSet } from "@/types/images";
 
 interface Room {
 	_id: string;
@@ -39,14 +40,20 @@ export function RoomDetailSection({ room }: { room: Room }) {
 					{room.images?.gallery?.length > 0 && (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
 							{room.images.gallery.map((img, i) => (
-								<motion.img
+								<motion.div
 									key={img}
-									src={img}
-									alt={`${room.name} ${i + 1}`}
-									className="rounded-xl object-cover w-full h-[320px]"
+									className="relative w-full h-[320px]"
 									initial={{ opacity: 0, scale: 0.95 }}
 									animate={{ opacity: 1, scale: 1 }}
-								/>
+								>
+									<Image
+										src={img}
+										alt={`${room.name} ${i + 1}`}
+										fill
+										sizes="(min-width: 768px) 50vw, 100vw"
+										className="rounded-xl object-cover"
+									/>
+								</motion.div>
 							))}
 						</div>
 					)}
