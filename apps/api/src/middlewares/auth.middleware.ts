@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 	user?: JwtPayload;
 }
 
-export const UserModel = (
+export const authenticate = (
 	req: AuthRequest,
 	res: Response,
 	next: NextFunction,
@@ -33,3 +33,7 @@ export const UserModel = (
 		return res.status(403).json({ message: "Invalid token" });
 	}
 };
+
+// Backwards-compatible aliases (some routes still import these older names)
+export const requireAuth = authenticate;
+export const UserModel = authenticate;

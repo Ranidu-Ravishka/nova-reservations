@@ -17,11 +17,6 @@ router.post("/", UserModel, authorize(Roles.CUSTOMER), createReservation);
 router.get("/", UserModel, authorize("ADMIN", "STAFF"), getReservations);
 
 // ADMIN / STAFF → update reservation status
-router.put(
-	"/:id",
-	UserModel,
-	authorize("ADMIN", "STAFF"),
-	updateReservation,
-);
+router.put("/:id", UserModel, authorize("ADMIN", "STAFF"), updateReservation);
 
 export default router;

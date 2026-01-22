@@ -4,11 +4,11 @@ import express from "express";
 import mongoose from "mongoose";
 import type { Socket } from "socket.io";
 import { Server } from "socket.io";
+import adminRoutes from "./routes/admin.routes";
+import authRoutes from "./routes/auth.routes";
 import availabilityRoutes from "./routes/availability.routes";
 import reservationRoutes from "./routes/reservation.routes";
 import roomRoutes from "./routes/room.routes";
-import authRoutes from "./routes/auth.routes";
-import adminRoutes from "./routes/admin.routes";
 
 // ---------- EXPRESS APP ----------
 const app = express();
