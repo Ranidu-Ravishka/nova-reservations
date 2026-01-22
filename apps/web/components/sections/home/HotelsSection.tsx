@@ -6,8 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
 interface Hotel {
 	_id: string;
 	name: string;
@@ -23,20 +21,40 @@ interface Hotel {
 export default function HotelsSection() {
 	const [hotels, setHotels] = useState<Hotel[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		fetch(`${API_BASE_URL}/api/hotels`)
-			.then((res) => {
-				if (!res.ok) throw new Error("Failed to fetch hotels");
-				return res.json();
-			})
-			.then(setHotels)
-			.catch(console.error)
-			.finally(() => setLoading(false));
+		let cancelled = false;
+
+		(async () => {
+			try {
+				setError(null);
+				const res = await fetch("/api/hotels", { cache: "no-store" });
+				if (!res.ok) {
+					if (!cancelled) setError("Hotels are temporarily unavailable.");
+					return;
+				}
+				const data = (await res.json()) as Hotel[];
+				if (!cancelled) setHotels(data);
+			} catch (err) {
+				console.error(err);
+				if (!cancelled) setError("Hotels are temporarily unavailable.");
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	if (loading) {
 		return <div className="py-24 text-center">Loading hotels...</div>;
+	}
+
+	if (error) {
+		return <div className="py-24 text-center">{error}</div>;
 	}
 
 	return (

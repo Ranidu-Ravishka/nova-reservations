@@ -25,18 +25,26 @@ type CreatePaymentResponse = {
 
 export default function BookingSummary({ reservation }: BookingSummaryProps) {
 	const payWithPaypal = async () => {
-		const res = await fetch("http://localhost:4000/api/payments/create", {
+		const token = localStorage.getItem("token");
+		const res = await fetch("/api/payments/create", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				...(token ? { Authorization: `Bearer ${token}` } : {}),
 			},
 			body: JSON.stringify({
 				reservationId: reservation._id,
 			}),
 		});
 
+		if (!res.ok) {
+			throw new Error("Failed to create PayPal payment");
+		}
+
 		const data: CreatePaymentResponse = await res.json();
+		if (!data?.approvalUrl) {
+			throw new Error("PayPal approval URL missing");
+		}
 		window.location.href = data.approvalUrl;
 	};
 

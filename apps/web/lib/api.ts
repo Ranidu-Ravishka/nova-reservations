@@ -61,7 +61,7 @@ export async function fetchHotels() {
 	});
 
 	if (!res.ok) {
-		throw new Error("Failed to fetch hotels");
+		return [];
 	}
 
 	return res.json();
@@ -73,7 +73,7 @@ export async function fetchHotelById(id: string) {
 	});
 
 	if (!res.ok) {
-		throw new Error("Hotel not found");
+		return null;
 	}
 
 	return res.json();

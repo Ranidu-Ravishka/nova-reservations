@@ -64,13 +64,23 @@ export function Header() {
 	/* ---------------- LOAD HOTELS (FIXED) ---------------- */
 
 	useEffect(() => {
-		fetch("http://localhost:4000/api/hotels")
-			.then((res) => {
-				if (!res.ok) throw new Error("Failed to fetch hotels");
-				return res.json();
-			})
-			.then((data) => setHotels(data))
-			.catch(console.error);
+		let cancelled = false;
+
+		(async () => {
+			try {
+				const res = await fetch("/api/hotels", { cache: "no-store" });
+				if (!res.ok) return;
+				const data = (await res.json()) as Hotel[];
+				if (!cancelled) setHotels(data);
+			} catch (err) {
+				// Keep header usable even if API is down.
+				console.error(err);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	/* ---------------- LOGOUT ---------------- */

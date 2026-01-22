@@ -10,11 +10,22 @@ interface Hotel {
 }
 
 export default async function HotelsPage() {
-	const hotels = await fetchHotels();
+	let hotels: Hotel[] = [];
+	try {
+		hotels = await fetchHotels();
+	} catch {
+		hotels = [];
+	}
 
 	return (
 		<div className="space-y-8">
 			<h1 className="text-3xl font-bold">Our Hotels</h1>
+
+			{hotels.length === 0 ? (
+				<div className="rounded-xl border p-6 text-sm text-gray-600">
+					Hotels are temporarily unavailable. Please try again later.
+				</div>
+			) : null}
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 				{hotels.map((hotel: Hotel) => (

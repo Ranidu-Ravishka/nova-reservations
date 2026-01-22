@@ -12,18 +12,26 @@ function PaymentSuccessContent() {
 		const payerId = params.get("PayerID");
 		const reservationId = params.get("reservation");
 
-		fetch("http://localhost:4000/api/payments/execute", {
+		if (!paymentId || !payerId || !reservationId) {
+			router.push("/profile/reservations");
+			return;
+		}
+
+		const token = localStorage.getItem("token");
+		fetch("/api/payments/execute", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				...(token ? { Authorization: `Bearer ${token}` } : {}),
 			},
 			body: JSON.stringify({
 				paymentId,
 				PayerID: payerId,
 				reservationId,
 			}),
-		}).then(() => router.push("/profile/reservations"));
+		})
+			.then(() => router.push("/profile/reservations"))
+			.catch(() => router.push("/profile/reservations"));
 	}, [params, router]);
 
 	return (

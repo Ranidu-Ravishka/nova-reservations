@@ -22,14 +22,22 @@ export function HotelsListingSection() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		fetch("http://localhost:4000/api/hotels")
-			.then((res) => {
-				if (!res.ok) throw new Error("Failed to fetch hotels");
-				return res.json();
-			})
-			.then(setHotels)
-			.catch(console.error)
-			.finally(() => setLoading(false));
+		let cancelled = false;
+		(async () => {
+			try {
+				const res = await fetch("/api/hotels", { cache: "no-store" });
+				if (!res.ok) return;
+				const data = (await res.json()) as Hotel[];
+				if (!cancelled) setHotels(data);
+			} catch (err) {
+				console.error(err);
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	if (loading) {

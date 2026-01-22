@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "@/lib/config";
 import { socket } from "@/lib/socket";
 import type { ImageSet } from "@/types/images";
 
@@ -39,11 +38,11 @@ export function RoomsListingSection() {
 
 	useEffect(() => {
 		setLoading(true);
+		const query = new URLSearchParams();
+		if (hotelId) query.set("hotelId", hotelId);
+		const url = `/api/rooms${query.toString() ? `?${query.toString()}` : ""}`;
 
-		const url = new URL(`${API_BASE_URL}/api/rooms`);
-		if (hotelId) url.searchParams.set("hotelId", hotelId);
-
-		fetch(url.toString())
+		fetch(url, { cache: "no-store" })
 			.then((res) => {
 				if (!res.ok) throw new Error("Failed to fetch rooms");
 				return res.json();
