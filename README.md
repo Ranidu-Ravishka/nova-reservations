@@ -2,6 +2,49 @@
 
 This Turborepo starter is maintained by the Turborepo core team.
 
+## Nova Reservations – Project Overview
+
+This workspace hosts three primary applications:
+
+- apps/api – Express + MongoDB backend with Socket.IO
+- apps/admin – Admin dashboard (Next.js) for managing hotels, rooms, reservations
+- apps/web – Customer-facing site (Next.js) with booking flow and live availability
+
+### New Enhancements
+
+- Admin dashboard metrics endpoint `/api/admin/dashboard` integrated and consumed
+- Admin tables: search/filter for Rooms & Reservations, improved loading states
+- Real-time reservation status updates and room availability via Socket.IO
+- Consistent API base URL handling across web/admin clients
+
+### Environment Variables
+
+Create `.env` files in app folders or export shell variables as needed:
+
+- NEXT_PUBLIC_API_BASE_URL (web) → default: http://localhost:4000
+- NEXT_PUBLIC_API_URL (admin) → default: http://localhost:4000
+- MONGO_URI (api) → your MongoDB connection string
+- PORT (api) → default: 4000
+
+### Quick Start
+
+```bash
+pnpm install
+
+# Start API first (ensure MONGO_URI is set)
+pnpm --filter api dev
+
+# Start Admin and Web apps
+pnpm --filter admin dev
+pnpm --filter web dev
+```
+
+### Notes
+
+- Admin requires `admin_token` in localStorage (set on login) for protected routes.
+- Web app listens for `availability:update` events to show live room availability.
+- API emits `reservation:status` on updates to keep admin views in sync.
+
 ## Using this example
 
 Run the following command:

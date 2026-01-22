@@ -1,7 +1,5 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
-
-export const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { API_BASE_URL } from "./config";
 
 /* ---------------- AXIOS INSTANCE ---------------- */
 
@@ -20,6 +18,22 @@ api.interceptors.request.use(
 		return config;
 	},
 	(error) => Promise.reject(error),
+);
+
+// Standardize auth failure handling
+api.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		const status = error?.response?.status;
+		if (typeof window !== "undefined" && (status === 401 || status === 403)) {
+			try {
+				localStorage.removeItem("token");
+			} catch {
+				// ignore storage errors (e.g., disabled storage, security restrictions)
+			}
+		}
+		return Promise.reject(error);
+	},
 );
 
 /* ---------------- AUTH ---------------- */

@@ -5,7 +5,8 @@ import { ArrowRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "@/lib/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 interface Hotel {
 	_id: string;
@@ -54,7 +55,7 @@ export default function HotelsSection() {
 							viewport={{ once: true }}
 						>
 							<Link href={`/hotels/${hotel._id}`} className="group block">
-								<div className="relative rounded-xl overflow-hidden aspect-[16/9]">
+								<div className="relative rounded-xl overflow-hidden aspect-video">
 									<Image
 										src={hero}
 										alt={hotel.name}

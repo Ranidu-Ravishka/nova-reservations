@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
+import { socket } from "@/lib/socket";
 import type { ImageSet } from "@/types/images";
 
 /* ---------------- TYPES ---------------- */
@@ -30,6 +31,9 @@ export function RoomsListingSection() {
 
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [availabilityByRoom, setAvailabilityByRoom] = useState<
+		Record<string, number>
+	>({});
 
 	/* ---------------- FETCH ROOMS (FIXED) ---------------- */
 
@@ -48,6 +52,20 @@ export function RoomsListingSection() {
 			.catch(console.error)
 			.finally(() => setLoading(false));
 	}, [hotelId]);
+
+	// Listen for live availability updates
+	useEffect(() => {
+		const handler = (payload: { roomId: string; remaining: number }) => {
+			setAvailabilityByRoom((prev) => ({
+				...prev,
+				[payload.roomId]: payload.remaining,
+			}));
+		};
+		socket.on("availability:update", handler);
+		return () => {
+			socket.off("availability:update", handler);
+		};
+	}, []);
 
 	if (loading) {
 		return <div className="p-10 text-charcoal/60">Loading rooms…</div>;
@@ -91,6 +109,13 @@ export function RoomsListingSection() {
 											<p className="text-charcoal/60 mt-2">
 												{room.description}
 											</p>
+
+											{availabilityByRoom[room._id] !== undefined && (
+												<div className="mt-3 text-sm text-red-600 font-medium">
+													Only {availabilityByRoom[room._id]} left for selected
+													dates
+												</div>
+											)}
 
 											<div className="flex gap-6 text-sm mt-4 text-charcoal/50">
 												{room.occupancy && (

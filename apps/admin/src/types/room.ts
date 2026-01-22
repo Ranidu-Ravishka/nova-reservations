@@ -33,6 +33,9 @@ export type Room = {
 
 	isActive: boolean;
 
+	// Optional availability flag for admin filtering
+	isAvailable?: boolean;
+
 	createdAt?: string;
 	updatedAt?: string;
 };

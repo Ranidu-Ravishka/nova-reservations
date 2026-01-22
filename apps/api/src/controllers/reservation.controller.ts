@@ -91,11 +91,51 @@ export const getReservations = async (req: AuthRequest, res: Response) => {
 		return res.status(401).json({ message: "Not authenticated" });
 	}
 
-	const reservations = await Reservation.find({
-		userId: req.user.id,
-	})
+	// If ADMIN or STAFF, return all reservations; otherwise return user's
+	const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+	const query = isPrivileged ? {} : { userId: req.user.id };
+
+	const reservations = await Reservation.find(query)
 		.populate("roomId")
 		.sort({ createdAt: -1 });
 
 	return res.json(reservations);
+};
+
+/* ---------------- UPDATE RESERVATION STATUS ---------------- */
+
+export const updateReservation = async (req: AuthRequest, res: Response) => {
+	if (!req.user) {
+		return res.status(401).json({ message: "Not authenticated" });
+	}
+
+	const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+	if (!isPrivileged) {
+		return res.status(403).json({ message: "Forbidden" });
+	}
+
+	const { id } = req.params as { id: string };
+	const { status } = req.body as { status?: string };
+
+	if (!status || !["CONFIRMED", "CANCELLED"].includes(status)) {
+		return res.status(400).json({ message: "Invalid status" });
+	}
+
+	const reservation = await Reservation.findByIdAndUpdate(
+		id,
+		{ status },
+		{ new: true },
+	);
+
+	if (!reservation) {
+		return res.status(404).json({ message: "Reservation not found" });
+	}
+
+	// Emit a socket event so clients can update in real-time
+	io.emit("reservation:status", {
+		id: reservation._id.toString(),
+		status: reservation.status,
+	});
+
+	return res.json(reservation);
 };
