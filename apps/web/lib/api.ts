@@ -56,53 +56,81 @@ export async function loginUser(email: string, password: string) {
 /* ---------------- HOTELS ---------------- */
 
 export async function fetchHotels() {
-	const res = await fetch(`${API_BASE_URL}/api/hotels`, {
-		cache: "no-store",
-	});
+	try {
+		const res = await fetch(`${API_BASE_URL}/api/hotels`, {
+			cache: "no-store",
+		});
 
-	if (!res.ok) {
+		if (!res.ok) {
+			return [];
+		}
+
+		return res.json();
+	} catch {
 		return [];
 	}
-
-	return res.json();
 }
 
 export async function fetchHotelById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/api/hotels/${id}`, {
-		cache: "no-store",
-	});
+	if (!id || id === "undefined") return null;
+	try {
+		const res = await fetch(
+			`${API_BASE_URL}/api/hotels/${encodeURIComponent(id)}`,
+			{
+				cache: "no-store",
+			},
+		);
 
-	if (!res.ok) {
+		if (!res.ok) {
+			return null;
+		}
+
+		return res.json();
+	} catch {
 		return null;
 	}
-
-	return res.json();
 }
 
 /* ---------------- ROOMS ---------------- */
 
 export async function fetchRoomById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
-		cache: "no-store",
-	});
+	if (!id || id === "undefined") return null;
+	try {
+		const res = await fetch(
+			`${API_BASE_URL}/api/rooms/${encodeURIComponent(id)}`,
+			{
+				cache: "no-store",
+			},
+		);
 
-	if (!res.ok) {
-		return null; // ✅ DO NOT THROW
+		if (!res.ok) {
+			return null; // ✅ DO NOT THROW
+		}
+
+		return res.json();
+	} catch {
+		return null;
 	}
-
-	return res.json();
 }
 
 export async function fetchRoomsByHotel(hotelId: string) {
-	const res = await fetch(`${API_BASE_URL}/api/rooms?hotelId=${hotelId}`, {
-		cache: "no-store",
-	});
+	if (!hotelId || hotelId === "undefined") return [];
+	try {
+		const res = await fetch(
+			`${API_BASE_URL}/api/rooms?hotelId=${encodeURIComponent(hotelId)}`,
+			{
+				cache: "no-store",
+			},
+		);
 
-	if (!res.ok) {
-		throw new Error("Failed to fetch rooms");
+		if (!res.ok) {
+			return [];
+		}
+
+		return res.json();
+	} catch {
+		return [];
 	}
-
-	return res.json();
 }
 
 /* ---------------- RESERVATIONS ---------------- */
@@ -119,12 +147,20 @@ export async function createReservation(payload: {
 }
 
 export async function fetchReservationById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/api/reservations/${id}`, {
-		cache: "no-store",
-	});
+	if (!id || id === "undefined") return null;
+	try {
+		const res = await fetch(
+			`${API_BASE_URL}/api/reservations/${encodeURIComponent(id)}`,
+			{
+				cache: "no-store",
+			},
+		);
 
-	if (!res.ok) return null;
-	return res.json();
+		if (!res.ok) return null;
+		return res.json();
+	} catch {
+		return null;
+	}
 }
 
 export async function checkRoomAvailability(payload: {
@@ -133,5 +169,64 @@ export async function checkRoomAvailability(payload: {
 	checkOut: string;
 }) {
 	const res = await api.post("/availability/check", payload);
+	return res.data;
+}
+
+/* ---------------- TRANSPORT ---------------- */
+
+export type TransportService = {
+	_id: string;
+	type: string;
+	price: number;
+	route: string;
+	capacity: number;
+	createdAt?: string;
+	updatedAt?: string;
+};
+
+export async function fetchTransports(): Promise<TransportService[]> {
+	try {
+		const res = await fetch(`${API_BASE_URL}/api/transports`, {
+			cache: "no-store",
+		});
+		if (!res.ok) return [];
+		return res.json();
+	} catch {
+		return [];
+	}
+}
+
+export type CreateTransportRequestPayload = {
+	transportId: string;
+	name: string;
+	email: string;
+	phone: string;
+	pickupLocation?: string;
+	dropoffLocation?: string;
+	pickupDate?: string;
+	passengers?: number;
+	notes?: string;
+};
+
+export type TransportRequest = {
+	_id: string;
+	transportId: string;
+	name: string;
+	email: string;
+	phone: string;
+	pickupLocation?: string;
+	dropoffLocation?: string;
+	pickupDate?: string;
+	passengers?: number;
+	notes?: string;
+	status?: "PENDING" | "CONFIRMED" | "CANCELLED";
+	createdAt?: string;
+	updatedAt?: string;
+};
+
+export async function createTransportRequest(
+	payload: CreateTransportRequestPayload,
+) {
+	const res = await api.post<TransportRequest>("/transport-requests", payload);
 	return res.data;
 }

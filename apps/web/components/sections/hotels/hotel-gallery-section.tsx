@@ -79,6 +79,7 @@ export function HotelGallerySection({
 												: "(min-width: 768px) 25vw, 50vw"
 										}
 										className="object-cover transition-transform duration-700 group-hover:scale-110"
+										unoptimized
 									/>
 								</div>
 								<div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/30 transition-colors flex items-center justify-center">
@@ -150,6 +151,7 @@ export function HotelGallerySection({
 								sizes="90vw"
 								className="object-contain rounded-lg"
 								priority
+								unoptimized
 							/>
 						</motion.div>
 

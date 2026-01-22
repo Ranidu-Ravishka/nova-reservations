@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import EmptyState, { RetryButton } from "@/components/admin/EmptyState";
+import PageContainer from "@/components/admin/PageContainer";
+import PageHeader from "@/components/admin/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -26,6 +29,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { api } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { socket } from "@/lib/socket";
 
 /* ---------------- TYPES ---------------- */
@@ -59,16 +63,27 @@ export default function ReservationsPage() {
 		"ALL",
 	);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [updatingId, setUpdatingId] = useState<string | null>(null);
 
 	/* ---------------- FETCH REAL DATA ---------------- */
 
-	useEffect(() => {
+	const loadReservations = useCallback(async () => {
 		setLoading(true);
-		api
-			.get("/reservations")
-			.then((res) => setReservations(res.data))
-			.finally(() => setLoading(false));
+		setError(null);
+		try {
+			const res = await api.get("/reservations");
+			setReservations(res.data);
+		} catch (e) {
+			setError(getErrorMessage(e, "Failed to load reservations"));
+		} finally {
+			setLoading(false);
+		}
 	}, []);
+
+	useEffect(() => {
+		loadReservations();
+	}, [loadReservations]);
 
 	// Real-time status updates
 	useEffect(() => {
@@ -88,13 +103,21 @@ export default function ReservationsPage() {
 	/* ---------------- UPDATE STATUS ---------------- */
 
 	const updateStatus = async (id: string, status: ReservationStatus) => {
-		await api.put(`/reservations/${id}`, { status });
-
+		const previous = reservations;
+		setUpdatingId(id);
 		setReservations((prev) =>
 			prev.map((r) => (r._id === id ? { ...r, status } : r)),
 		);
-
-		setSelected(null);
+		try {
+			await api.put(`/reservations/${id}`, { status });
+			toast.success("Reservation status updated");
+			setSelected(null);
+		} catch (e) {
+			setReservations(previous);
+			toast.error(getErrorMessage(e, "Failed to update reservation"));
+		} finally {
+			setUpdatingId(null);
+		}
 	};
 
 	const filtered = useMemo(() => {
@@ -104,12 +127,13 @@ export default function ReservationsPage() {
 	}, [reservations, statusFilter]);
 
 	return (
-		<div className="p-6 space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center justify-between">
-						Reservations Management
-						<div className="w-40">
+		<PageContainer>
+			<PageHeader
+				title="Reservations"
+				description="Review and manage guest reservations"
+				actions={
+					<div className="flex items-center gap-2">
+						<div className="w-44">
 							<Select
 								value={statusFilter}
 								onValueChange={(v) =>
@@ -126,13 +150,38 @@ export default function ReservationsPage() {
 								</SelectContent>
 							</Select>
 						</div>
-					</CardTitle>
-				</CardHeader>
+						<Button variant="outline" onClick={loadReservations}>
+							Refresh
+						</Button>
+					</div>
+				}
+			/>
 
-				<CardContent>
+			{error ? (
+				<EmptyState
+					title="Couldn’t load reservations"
+					description={error}
+					action={<RetryButton onClick={loadReservations} />}
+				/>
+			) : null}
+
+			{!error && !loading && filtered.length === 0 ? (
+				<EmptyState
+					title="No reservations"
+					description="Try changing the filter or check back later."
+					action={
+						<Button variant="outline" onClick={loadReservations}>
+							Refresh
+						</Button>
+					}
+				/>
+			) : null}
+
+			{!error && (loading || filtered.length > 0) ? (
+				<div className="rounded-lg border bg-card">
 					{loading ? (
 						<div className="p-4 text-muted-foreground">
-							Loading reservations...
+							Loading reservations…
 						</div>
 					) : (
 						<Table>
@@ -152,21 +201,18 @@ export default function ReservationsPage() {
 								{filtered.map((r) => (
 									<TableRow key={r._id}>
 										<TableCell>
-											{r.userId?.name}
-											<div className="text-xs text-gray-500">
-												{r.userId?.email}
+											{r.userId?.name || "—"}
+											<div className="text-xs text-muted-foreground">
+												{r.userId?.email || ""}
 											</div>
 										</TableCell>
 
 										<TableCell>{r.roomId?.hotelId?.name || "—"}</TableCell>
-
-										<TableCell>{r.roomId?.name}</TableCell>
-
+										<TableCell>{r.roomId?.name || "—"}</TableCell>
 										<TableCell>
 											{new Date(r.checkIn).toLocaleDateString()} →{" "}
 											{new Date(r.checkOut).toLocaleDateString()}
 										</TableCell>
-
 										<TableCell>
 											<Badge
 												variant={
@@ -176,14 +222,13 @@ export default function ReservationsPage() {
 												{r.status}
 											</Badge>
 										</TableCell>
-
 										<TableCell>${r.totalPrice}</TableCell>
-
 										<TableCell className="text-right">
 											<Button
 												size="sm"
 												variant="outline"
 												onClick={() => setSelected(r)}
+												disabled={updatingId === r._id}
 											>
 												Manage
 											</Button>
@@ -193,8 +238,8 @@ export default function ReservationsPage() {
 							</TableBody>
 						</Table>
 					)}
-				</CardContent>
-			</Card>
+				</div>
+			) : null}
 
 			{/* -------- STATUS MODAL -------- */}
 
@@ -210,6 +255,7 @@ export default function ReservationsPage() {
 							onValueChange={(value) =>
 								updateStatus(selected._id, value as ReservationStatus)
 							}
+							disabled={updatingId === selected._id}
 						>
 							<SelectTrigger>
 								<SelectValue />
@@ -222,6 +268,6 @@ export default function ReservationsPage() {
 					)}
 				</DialogContent>
 			</Dialog>
-		</div>
+		</PageContainer>
 	);
 }

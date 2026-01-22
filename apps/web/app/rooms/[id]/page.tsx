@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { RoomDetailSection } from "@/components/sections/rooms/room-detail-section";
-import { fetchRoomById } from "@/lib/api";
+import { fetchRoomByIdServer } from "@/lib/serverApi";
 
 export default async function RoomPage({ params }: { params: { id: string } }) {
-	const room = await fetchRoomById(params.id);
+	const room = await fetchRoomByIdServer(params.id);
 
 	if (!room) {
 		notFound();

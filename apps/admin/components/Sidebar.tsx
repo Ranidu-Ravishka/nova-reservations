@@ -30,33 +30,57 @@ const links = [
 	{ href: "/amenities", label: "Amenities", icon: ConciergeBell },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+	mobile = false,
+	onNavigate,
+}: {
+	mobile?: boolean;
+	onNavigate?: () => void;
+}) {
+	return <SidebarInner mobile={mobile} onNavigate={onNavigate} />;
+}
+
+function SidebarInner({
+	mobile,
+	onNavigate,
+}: {
+	mobile: boolean;
+	onNavigate?: () => void;
+}) {
 	const pathname = usePathname();
 
 	return (
-		<aside className="w-64 min-h-screen bg-white border-r border-neutral-200 flex flex-col shadow-xl overflow-x-hidden mr-24">
-			<div className="translate-x-2.5 min-h-screen flex flex-col justify-between">
+		<aside
+			className={cn(
+				"w-64 shrink-0 border-r bg-background",
+				mobile ? "h-full" : "hidden md:flex md:h-dvh",
+			)}
+		>
+			<div className="flex h-full w-full flex-col">
 				{/* Header */}
-				<div className="border-b border-white/10">
+				<div className="border-b px-4 py-3">
 					<div className="flex items-center gap-3">
-						<div className="relative w-16 h-16 overflow-hidden flex items-center justify-center">
+						<div className="relative h-9 w-9 overflow-hidden rounded bg-muted">
 							<Image
 								src="/nova-white.png"
-								alt="Nova Logo"
-								height={500}
-								width={500}
-								className="object-contain invert"
+								alt="Nova"
+								height={36}
+								width={36}
+								className="object-contain p-1 invert"
 								priority
 							/>
 						</div>
-						<div>
-							<p className="text-xs text-gray-400">Admin Dashboard</p>
+						<div className="min-w-0">
+							<p className="text-sm font-semibold leading-tight">Nova Admin</p>
+							<p className="text-xs text-muted-foreground truncate">
+								Operations dashboard
+							</p>
 						</div>
 					</div>
 				</div>
 
 				{/* Navigation */}
-				<nav className="flex-1 p-4 overflow-y-auto">
+				<nav className="flex-1 overflow-y-auto p-3">
 					<div className="space-y-1">
 						{links.map(({ href, label, icon: Icon }) => {
 							const isActive =
@@ -67,43 +91,34 @@ export default function Sidebar() {
 								<Link
 									key={href}
 									href={href}
+									onClick={() => onNavigate?.()}
 									className={cn(
-										"flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+										"group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
 										isActive
-											? "bg-white/10 text-white font-medium"
-											: "text-gray-300 hover:bg-white/5 hover:text-white",
+											? "bg-muted text-foreground"
+											: "text-muted-foreground hover:bg-muted hover:text-foreground",
 									)}
 								>
 									<Icon
 										size={18}
 										className={cn(
-											isActive ? "text-[#D7C08A]" : "text-gray-400",
+											"text-muted-foreground group-hover:text-foreground",
+											isActive && "text-foreground",
 										)}
 									/>
-									<span>{label}</span>
-									{isActive && (
-										<div className="ml-auto w-1 h-4 bg-[#D7C08A] rounded-full" />
-									)}
+									<span className="truncate">{label}</span>
+									{isActive ? (
+										<div className="ml-auto h-2 w-2 rounded-full bg-primary" />
+									) : null}
 								</Link>
 							);
 						})}
 					</div>
 				</nav>
 
-				{/* Footer - User Profile */}
-				<div className="-translate-y-2.5">
-					<div className="flex items-center gap-3 py-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-						<div className="relative w-8 h-8 rounded-full bg-linear-to-br from-[#D7C08A] to-amber-700 overflow-hidden">
-							{/* You can replace this with an actual user avatar */}
-							<div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-black">
-								A
-							</div>
-						</div>
-						<div className="flex-1 min-w-0">
-							<p className="text-sm font-medium truncate">Admin User</p>
-							<p className="text-xs text-gray-400 truncate">admin@nova.com</p>
-						</div>
-					</div>
+				{/* Footer */}
+				<div className="border-t px-4 py-3">
+					<p className="text-xs text-muted-foreground">Signed in as Admin</p>
 				</div>
 			</div>
 		</aside>

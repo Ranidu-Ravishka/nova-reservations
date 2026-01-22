@@ -1,18 +1,17 @@
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
 
-export default function RootLayout({
-	children,
-}: {
-	children: React.ReactNode;
-}) {
+import type { ReactNode } from "react";
+import { Toaster } from "sonner";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
-		<html lang="en">
-			<body className="">
-				<div className="flex">
-					<Sidebar />
-					<main className="w-full admin flex-1">{children}</main>
-				</div>
+		<html lang="en" suppressHydrationWarning>
+			<body
+				className="min-h-dvh bg-background text-foreground"
+				suppressHydrationWarning
+			>
+				{children}
+				<Toaster />
 			</body>
 		</html>
 	);

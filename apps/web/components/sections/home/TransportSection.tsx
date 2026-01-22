@@ -100,7 +100,7 @@ export default function TransportSection() {
 						transition={{ duration: 0.6, delay: 0.2 }}
 						className="relative"
 					>
-						<div className="relative overflow-hidden rounded-2xl aspect-[4/5]">
+						<div className="relative overflow-hidden rounded-2xl aspect-4/5">
 							<Image
 								src="/luxury-chauffeur-car-service-mercedes-black-sri-la.jpg"
 								alt="Luxury Transport"
@@ -108,10 +108,10 @@ export default function TransportSection() {
 								sizes="(min-width: 1024px) 50vw, 100vw"
 								className="object-cover"
 							/>
-							<div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 to-transparent" />
+							<div className="absolute inset-0 bg-linear-to-t from-charcoal/40 to-transparent" />
 						</div>
 						{/* Floating Card */}
-						<div className="absolute -bottom-6 -left-6 glass-dark rounded-xl p-6 max-w-[280px]">
+						<div className="absolute -bottom-6 -left-6 glass-dark rounded-xl p-6 max-w-70">
 							<div className="text-3xl font-serif font-semibold text-gold mb-2">
 								24/7
 							</div>

@@ -26,8 +26,10 @@ const userSchema = new Schema(
 
 		role: {
 			type: String,
-			enum: ["ADMIN", "STAFF", "USER"],
-			default: "USER",
+			enum: ["ADMIN", "STAFF", "CUSTOMER", "USER"],
+			// Default to CUSTOMER because most customer-facing routes authorize CUSTOMER.
+			// Keep legacy USER for backwards compatibility with existing data.
+			default: "CUSTOMER",
 		},
 	},
 	{ timestamps: true },

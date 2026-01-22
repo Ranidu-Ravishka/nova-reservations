@@ -5,17 +5,14 @@ import { ArrowRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getHotelPrimaryImage } from "@/lib/hotelImages";
 
 interface Hotel {
 	_id: string;
 	name: string;
 	location: string;
 	description?: string;
-	images?: {
-		hero?: string;
-		listing?: string;
-		gallery?: string[];
-	};
+	images?: unknown;
 }
 
 export default function HotelsSection() {
@@ -61,8 +58,7 @@ export default function HotelsSection() {
 		<section className="py-24 bg-muted">
 			<div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8">
 				{hotels.map((hotel, i) => {
-					const hero =
-						hotel.images?.listing || hotel.images?.hero || "/placeholder.svg";
+					const hero = getHotelPrimaryImage(hotel.images);
 
 					return (
 						<motion.article
@@ -79,7 +75,8 @@ export default function HotelsSection() {
 										alt={hotel.name}
 										fill
 										sizes="(min-width: 768px) 50vw, 100vw"
-										className="object-cover h-72 w-full group-hover:scale-110 transition"
+										className="object-cover group-hover:scale-110 transition"
+										unoptimized
 									/>
 
 									<div className="absolute inset-0 bg-black/50" />
