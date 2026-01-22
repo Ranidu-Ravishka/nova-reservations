@@ -7,6 +7,8 @@ import { Server } from "socket.io";
 import availabilityRoutes from "./routes/availability.routes";
 import reservationRoutes from "./routes/reservation.routes";
 import roomRoutes from "./routes/room.routes";
+import authRoutes from "./routes/auth.routes";
+import adminRoutes from "./routes/admin.routes";
 
 // ---------- EXPRESS APP ----------
 const app = express();
@@ -24,6 +26,10 @@ app.use(
 );
 
 // ---------- ROUTES ----------
+app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/availability", availabilityRoutes);

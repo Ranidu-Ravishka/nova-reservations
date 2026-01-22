@@ -5,21 +5,21 @@ import {
 	getReservations,
 	updateReservation,
 } from "../controllers/reservation.controller";
-import { authenticate } from "../middlewares/auth.middleware";
+import { UserModel } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/role.middleware";
 
 const router = Router();
 
 // CUSTOMER → create reservation (PENDING / HOLD)
-router.post("/", authenticate, authorize(Roles.CUSTOMER), createReservation);
+router.post("/", UserModel, authorize(Roles.CUSTOMER), createReservation);
 
 // ADMIN / STAFF → view all reservations
-router.get("/", authenticate, authorize("ADMIN", "STAFF"), getReservations);
+router.get("/", UserModel, authorize("ADMIN", "STAFF"), getReservations);
 
 // ADMIN / STAFF → update reservation status
 router.put(
 	"/:id",
-	authenticate,
+	UserModel,
 	authorize("ADMIN", "STAFF"),
 	updateReservation,
 );

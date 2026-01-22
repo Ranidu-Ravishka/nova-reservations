@@ -1,24 +1,56 @@
-import bcrypt from "bcrypt";
-import { model, Schema } from "mongoose";
+import { Schema, model, type InferSchemaType } from "mongoose";
+import bcrypt from "bcryptjs";
 
-const UserSchema = new Schema(
-	{
-		name: { type: String, required: true },
-		email: { type: String, required: true, unique: true },
-		password: { type: String, required: true },
-		role: {
-			type: String,
-			enum: ["ADMIN", "CUSTOMER", "STAFF"],
-			default: "CUSTOMER",
-		},
-	},
-	{ timestamps: true },
+/* ---------- USER SCHEMA ---------- */
+const userSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+      select: false, // 👈 IMPORTANT for security
+    },
+
+    role: {
+      type: String,
+      enum: ["ADMIN", "STAFF", "USER"],
+      default: "USER",
+    },
+  },
+  { timestamps: true }
 );
 
-// Hash password before save
-UserSchema.pre("save", async function () {
-	if (!this.isModified("password")) return;
-	this.password = await bcrypt.hash(this.password, 10);
+/* ---------- PASSWORD HASHING ---------- */
+userSchema.pre("save", async function () {
+  // `this` is now correctly inferred
+  if (!this.isModified("password")) return;
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-export const User = model("User", UserSchema);
+/* ---------- PASSWORD COMPARISON ---------- */
+userSchema.methods.comparePassword = async function (
+  candidate: string
+): Promise<boolean> {
+  return bcrypt.compare(candidate, this.password);
+};
+
+/* ---------- TYPES ---------- */
+export type User = InferSchemaType<typeof userSchema> & {
+  comparePassword(candidate: string): Promise<boolean>;
+};
+
+/* ---------- MODEL ---------- */
+export const UserModel = model<User>("User", userSchema);
