@@ -5,8 +5,8 @@ import {
 	HotelHeroSection,
 	HotelOverviewSection,
 } from "@/components/sections/hotels";
-import { fetchHotelById, fetchRoomsByHotel } from "@/lib/api";
 import { HotelRoomsSection } from "@/components/sections/hotels/hotel-rooms-section";
+import { fetchHotelById, fetchRoomsByHotel } from "@/lib/api";
 
 export default async function HotelPage({
 	params,

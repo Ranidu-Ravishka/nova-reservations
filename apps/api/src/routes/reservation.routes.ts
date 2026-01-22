@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Roles } from "../constants/roles";
 import {
 	createReservation,
 	getReservations,
@@ -9,7 +10,7 @@ import { authorize } from "../middlewares/role.middleware";
 const router = Router();
 
 // CUSTOMER → create reservation (PENDING / HOLD)
-router.post("/", authenticate, authorize("CUSTOMER"), createReservation);
+router.post("/", authenticate, authorize(Roles.CUSTOMER), createReservation);
 
 // ADMIN / STAFF → view all reservations
 router.get("/", authenticate, authorize("ADMIN", "STAFF"), getReservations);

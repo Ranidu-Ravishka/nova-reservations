@@ -6,6 +6,7 @@ import {
 	Phone,
 	Twitter,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const hotels = [
@@ -48,10 +49,18 @@ export function Footer() {
 					{/* Brand */}
 					<div className="lg:col-span-1">
 						<div className="flex flex-col mb-6">
-							<span className="text-2xl font-serif font-semibold tracking-wide">
-								NOVA
-							</span>
-							<span className="text-xs tracking-[0.3em] text-gold uppercase">
+							<Link href="/" aria-label="NOVA Home" className="w-fit">
+								<Image
+									src={
+										"https://drive.google.com/uc?export=view&id=157D1c8TFTpM1ivRzzrCvkvAiFVpxdiIb"
+									}
+									alt="NOVA logo"
+									width={160}
+									height={44}
+									className="h-11 w-auto"
+								/>
+							</Link>
+							<span className="mt-2 text-xs tracking-[0.3em] text-gold uppercase">
 								Reservations Group
 							</span>
 						</div>
@@ -60,24 +69,27 @@ export function Footer() {
 							in Sri Lanka. Where every moment becomes a cherished memory.
 						</p>
 						<div className="flex gap-4">
-							<a
+							<Link
 								href="/"
 								className="w-10 h-10 rounded-full border border-ivory/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+								aria-label="Instagram"
 							>
 								<Instagram className="w-4 h-4" />
-							</a>
-							<a
+							</Link>
+							<Link
 								href="/"
 								className="w-10 h-10 rounded-full border border-ivory/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+								aria-label="Facebook"
 							>
 								<Facebook className="w-4 h-4" />
-							</a>
-							<a
+							</Link>
+							<Link
 								href="/"
 								className="w-10 h-10 rounded-full border border-ivory/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+								aria-label="Twitter"
 							>
 								<Twitter className="w-4 h-4" />
-							</a>
+							</Link>
 						</div>
 					</div>
 

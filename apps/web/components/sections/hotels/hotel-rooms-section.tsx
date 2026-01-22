@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Maximize, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -88,7 +89,9 @@ export function HotelRoomsSection({
 										<img
 											src={room.images?.[0] || "/placeholder.svg"}
 											alt={room.name}
-											className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+											fill
+											sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+											className="object-cover transition-transform duration-700 group-hover:scale-110"
 										/>
 									</div>
 

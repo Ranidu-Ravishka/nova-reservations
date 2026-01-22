@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,21 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+			router.push("/");
+		} catch (err: unknown) {
+			const message =
+				err instanceof Error
+					? err.message
+					: typeof err === "object" && err !== null
+						? ((err as { response?: { data?: { message?: string } } }).response
+								?.data?.message ?? "Registration failed")
+						: "Registration failed";
+
+			setError(message);
+		} finally {
+			setLoading(false);
+		}
+	};
 
   return (
     <div className="min-h-screen pt-24 flex items-center justify-center bg-charcoal">
