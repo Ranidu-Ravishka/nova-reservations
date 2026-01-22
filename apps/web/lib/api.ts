@@ -1,12 +1,31 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
-const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+export const API_BASE_URL =
+	process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+/* ---------------- AXIOS INSTANCE ---------------- */
+
+export const api = axios.create({
+	baseURL: `${API_BASE_URL}/api`,
+});
+
+api.interceptors.request.use(
+	(config: InternalAxiosRequestConfig) => {
+		if (typeof window !== "undefined") {
+			const token = localStorage.getItem("token");
+			if (token) {
+				config.headers.Authorization = `Bearer ${token}`;
+			}
+		}
+		return config;
+	},
+	(error) => Promise.reject(error),
+);
 
 /* ---------------- AUTH ---------------- */
 
 export async function loginUser(email: string, password: string) {
-	const res = await fetch(`${API_BASE_URL}/auth/login`, {
+	const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ email, password }),
@@ -20,32 +39,10 @@ export async function loginUser(email: string, password: string) {
 	return res.json();
 }
 
-/* ---------------- AXIOS INSTANCE ---------------- */
-
-export const api = axios.create({
-	baseURL: API_BASE_URL,
-});
-
-api.interceptors.request.use(
-	(config: InternalAxiosRequestConfig) => {
-		if (typeof window !== "undefined") {
-			const token = localStorage.getItem("token");
-
-			if (token) {
-				// Axios v1+ guarantees headers object
-				config.headers.Authorization = `Bearer ${token}`;
-			}
-		}
-
-		return config;
-	},
-	(error) => Promise.reject(error),
-);
-
 /* ---------------- HOTELS ---------------- */
 
 export async function fetchHotels() {
-	const res = await fetch(`${API_BASE_URL}/hotels`, {
+	const res = await fetch(`${API_BASE_URL}/api/hotels`, {
 		cache: "no-store",
 	});
 
@@ -57,7 +54,7 @@ export async function fetchHotels() {
 }
 
 export async function fetchHotelById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/hotels/${id}`, {
+	const res = await fetch(`${API_BASE_URL}/api/hotels/${id}`, {
 		cache: "no-store",
 	});
 
@@ -71,21 +68,23 @@ export async function fetchHotelById(id: string) {
 /* ---------------- ROOMS ---------------- */
 
 export async function fetchRoomById(id: string) {
-	const res = await fetch(`${API_BASE_URL}/rooms/${id}`, {
-		cache: "no-store",
-	});
+  const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
+    cache: "no-store",
+  });
 
-	if (!res.ok) {
-		throw new Error("Room not found");
-	}
+  if (!res.ok) {
+    return null; // ✅ DO NOT THROW
+  }
 
-	return res.json();
+  return res.json();
 }
 
+
 export async function fetchRoomsByHotel(hotelId: string) {
-	const res = await fetch(`${API_BASE_URL}/rooms?hotel=${hotelId}`, {
-		cache: "no-store",
-	});
+	const res = await fetch(
+		`${API_BASE_URL}/api/rooms?hotelId=${hotelId}`,
+		{ cache: "no-store" }
+	);
 
 	if (!res.ok) {
 		throw new Error("Failed to fetch rooms");
@@ -94,25 +93,34 @@ export async function fetchRoomsByHotel(hotelId: string) {
 	return res.json();
 }
 
-/* ---------------- BOOKINGS ---------------- */
+/* ---------------- RESERVATIONS ---------------- */
 
-export async function createReservation(
-	token: string,
-	payload: Record<string, unknown>,
-) {
-	const res = await fetch(`${API_BASE_URL}/reservations`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
-		},
-		body: JSON.stringify(payload),
-	});
+export async function createReservation(payload: {
+	roomTypeId: string;
+	checkIn: string;
+	checkOut: string;
+	adults: number;
+	roomsBooked: number;
+}) {
+	const res = await api.post("/reservations", payload);
+	return res.data;
+}
 
-	if (!res.ok) {
-		const err = await res.json();
-		throw new Error(err.message || "Booking failed");
-	}
+export async function fetchReservationById(id: string) {
+	const res = await fetch(
+		`${API_BASE_URL}/api/reservations/${id}`,
+		{ cache: "no-store" }
+	);
 
+	if (!res.ok) return null;
 	return res.json();
+}
+
+export async function checkRoomAvailability(payload: {
+	roomTypeId: string;
+	checkIn: string;
+	checkOut: string;
+}) {
+	const res = await api.post("/availability/check", payload);
+	return res.data;
 }

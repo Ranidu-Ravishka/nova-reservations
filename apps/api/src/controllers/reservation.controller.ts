@@ -1,64 +1,112 @@
 import type { Request, Response } from "express";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
-import { isRoomAvailable } from "../services/availability.service";
+import { countOverlappingReservations } from "../services/availability.service";
+import { io } from "../server";
 
-export const createReservation = async (req: Request, res: Response) => {
-	const { roomId, checkIn, checkOut, userId } = req.body;
 
-	if (new Date(checkIn) >= new Date(checkOut)) {
-		return res.status(400).json({ message: "Invalid date range" });
-	}
+/* ---------------- EXTENDED REQUEST TYPE ---------------- */
 
-	// 🔒 Check availability
-	const available = await isRoomAvailable(
-		roomId,
-		new Date(checkIn),
-		new Date(checkOut),
-	);
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role?: string;
+  };
+}
 
-	if (!available) {
-		return res.status(409).json({
-			message: "Room is not available for selected dates",
-		});
-	}
+/* ---------------- CREATE RESERVATION ---------------- */
 
-	// 💰 Price calculation
-	const room = await Room.findById(roomId);
-	const nights =
-		(new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
-		(1000 * 60 * 60 * 24);
+export const createReservation = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const { roomTypeId, checkIn, checkOut, roomsBooked } = req.body as {
+    roomTypeId: string;
+    checkIn: string;
+    checkOut: string;
+    roomsBooked: number;
+  };
 
-	const totalPrice = nights * (room?.pricePerNight || 0);
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
 
-	const reservation = await Reservation.create({
-		userId,
-		roomId,
-		checkIn,
-		checkOut,
-		totalPrice,
-	});
+  if (!roomTypeId || !checkIn || !checkOut || !roomsBooked) {
+    return res.status(400).json({ message: "Missing booking data" });
+  }
 
-	res.status(201).json(reservation);
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
+
+  if (checkInDate >= checkOutDate) {
+    return res.status(400).json({ message: "Invalid date range" });
+  }
+
+  const room = await Room.findById(roomTypeId);
+  if (!room || !room.isActive) {
+    return res.status(404).json({ message: "Room not available" });
+  }
+
+  const alreadyBooked = await countOverlappingReservations(
+    room._id.toString(),
+    checkInDate,
+    checkOutDate,
+  );
+
+  const remainingRooms = room.totalRooms - alreadyBooked;
+
+  if (roomsBooked > remainingRooms) {
+    return res.status(409).json({
+      message: "Not enough rooms available",
+      remaining: remainingRooms,
+    });
+  }
+
+  const nights =
+    (checkOutDate.getTime() - checkInDate.getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  const totalPrice = nights * room.pricePerNight * roomsBooked;
+
+  const reservation = await Reservation.create({
+    userId: req.user.id,
+    roomId: room._id,
+    checkIn: checkInDate,
+    checkOut: checkOutDate,
+    roomsBooked,
+    totalPrice,
+    status: "CONFIRMED",
+  });
+
+  io.emit("availability:update", {
+  roomId: room._id.toString(),
+  remaining: remainingRooms - roomsBooked,
+});
+
+
+  return res.status(201).json({
+    reservation,
+    remainingAfterBooking: remainingRooms - roomsBooked,
+  });
 };
 
-export const getReservations = async (_: Request, res: Response) => {
-	const reservations = await Reservation.find()
-		.populate("roomId")
-		.populate("userId");
-	res.json(reservations);
+/* ---------------- GET USER RESERVATIONS ---------------- */
+
+export const getReservations = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const reservations = await Reservation.find({
+    userId: req.user.id,
+  })
+    .populate("roomId")
+    .sort({ createdAt: -1 });
+
+  return res.json(reservations);
 };
 
-export const updateReservationStatus = async (req: Request, res: Response) => {
-	const reservation = await Reservation.findByIdAndUpdate(
-		req.params.id,
-		{ status: req.body.status },
-		{ new: true },
-	);
-	res.json(reservation);
-};
 
-export const deleteReservation = async (req: Request, res: Response) => {
-	await Reservation.findByIdAndDelete(req.params.id);
-	res.json({ message: "Reservation cancelled" });
-};

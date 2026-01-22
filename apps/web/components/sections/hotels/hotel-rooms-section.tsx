@@ -85,8 +85,8 @@ export function HotelRoomsSection({
 							<Link href={`/rooms/${room._id}`}>
 								<div className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
 									{/* Image */}
-									<div className="relative aspect-[4/3] overflow-hidden">
-										<Image
+									<div className="relative aspect-4/3 overflow-hidden">
+										<img
 											src={room.images?.[0] || "/placeholder.svg"}
 											alt={room.name}
 											fill

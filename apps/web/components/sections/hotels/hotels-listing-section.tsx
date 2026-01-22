@@ -7,79 +7,85 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Hotel {
-	_id: string;
-	name: string;
-	location: string;
-	description: string;
-	amenities: string[];
-	images: string[]; // ✅ SIMPLE ARRAY
+  _id: string;
+  name: string;
+  location: string;
+  description: string;
+  images?: {
+    hero?: string;
+    listing?: string;
+  };
 }
 
 export function HotelsListingSection() {
-	const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		fetch("http://localhost:4000/api/hotels")
-			.then((res) => res.json())
-			.then(setHotels);
-	}, []);
+  useEffect(() => {
+    fetch("http://localhost:4000/api/hotels")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch hotels");
+        return res.json();
+      })
+      .then(setHotels)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-	return (
-		<section className="py-24 bg-cream">
-			<div className="mx-auto max-w-7xl px-6 space-y-16">
-				{hotels.map((hotel, index) => {
-					const cardImage =
-						hotel.images?.[1] || hotel.images?.[0] || "/placeholder.svg";
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-charcoal/60">
+        Loading hotels…
+      </div>
+    );
+  }
 
-					return (
-						<motion.div
-							key={hotel._id}
-							initial={{ opacity: 0, y: 40 }}
-							whileInView={{ opacity: 1, y: 0 }}
-							viewport={{ once: true }}
-							transition={{ duration: 0.6, delay: index * 0.1 }}
-						>
-							<Link href={`/hotels/${hotel._id}`} className="group block">
-								<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-									{/* Image */}
-									<div className="overflow-hidden rounded-2xl">
-										<Image
-											src={cardImage}
-											alt={hotel.name}
-											width={1200}
-											height={800}
-											className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-										/>
-									</div>
+  return (
+    <section className="py-24 bg-cream">
+      <div className="max-w-7xl mx-auto px-6 space-y-16">
+        {hotels.map((hotel, index) => (
+          <motion.article
+            key={hotel._id}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            viewport={{ once: true }}
+          >
+            <Link href={`/hotels/${hotel._id}`} className="block group">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src={
+                    hotel.images?.listing ||
+                    hotel.images?.hero ||
+                    "/placeholder.svg"
+                  }
+                  alt={hotel.name}
+                  className="h-72 w-full object-cover group-hover:scale-105 transition"
+                />
 
-									{/* Content */}
-									<div>
-										<div className="flex items-center gap-2 text-gold text-sm mb-3">
-											<MapPin className="w-4 h-4" />
-											<span className="uppercase tracking-wider">
-												{hotel.location}
-											</span>
-										</div>
+                <div className="absolute inset-0 bg-black/50" />
 
-										<h2 className="text-3xl md:text-4xl font-serif font-semibold text-charcoal mb-4">
-											{hotel.name}
-										</h2>
+                <div className="absolute bottom-0 p-6 text-white space-y-2">
+                  <div className="flex items-center gap-2 text-gold text-sm">
+                    <MapPin className="w-4 h-4" />
+                    {hotel.location}
+                  </div>
 
-										<p className="text-charcoal/70 text-lg mb-6">
-											{hotel.description}
-										</p>
+                  <h2 className="text-2xl font-serif">{hotel.name}</h2>
 
-										<div className="flex items-center gap-2 text-gold font-medium">
-											<span>Explore {hotel.name}</span>
-											<ArrowRight className="w-5 h-5" />
-										</div>
-									</div>
-								</div>
-							</Link>
-						</motion.div>
-					);
-				})}
-			</div>
-		</section>
-	);
+                  <p className="text-sm text-white/80 line-clamp-2">
+                    {hotel.description}
+                  </p>
+
+                  <span className="inline-flex items-center gap-2 text-gold mt-2">
+                    Explore <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.article>
+        ))}
+      </div>
+    </section>
+  );
 }

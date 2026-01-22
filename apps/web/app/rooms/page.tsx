@@ -3,8 +3,16 @@ import { RoomsListingSection } from "@/components/sections/rooms/rooms-listing-s
 
 export default function RoomsPage() {
 	return (
-		<Suspense fallback={<div className="p-8">Loading rooms...</div>}>
-			<RoomsListingSection />
-		</Suspense>
+		<main className="min-h-screen bg-cream">
+			<Suspense
+				fallback={
+					<div className="p-8 text-center text-charcoal/70">
+						Loading rooms...
+					</div>
+				}
+			>
+				<RoomsListingSection />
+			</Suspense>
+		</main>
 	);
 }

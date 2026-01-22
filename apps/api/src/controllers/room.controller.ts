@@ -1,57 +1,47 @@
-import type { Request, Response } from "express";
+import type { RequestHandler } from "express";
 import { Room } from "../models/Room";
 
-/* ---------------- CREATE ROOM ---------------- */
-export const createRoom = async (req: Request, res: Response) => {
-	try {
-		const room = await Room.create(req.body);
-		res.status(201).json(room);
-	} catch (_error) {
-		res.status(400).json({ message: "Failed to create room", _error });
-	}
+/* CREATE */
+export const createRoom: RequestHandler = async (req, res) => {
+  const room = await Room.create(req.body);
+  res.status(201).json(room);
 };
 
-export const getRooms = async (req: Request, res: Response) => {
-	const filter = req.query.hotelId ? { hotelId: req.query.hotelId } : {};
+/* GET ALL (FILTERABLE) */
+export const getRooms: RequestHandler = async (req, res) => {
+  const { hotelId, type, capacity } = req.query;
 
-	const rooms = await Room.find(filter).populate("hotelId", "name");
-	res.json(rooms);
+  const query: Record<string, unknown> = {
+    isActive: true,
+  };
+
+  if (hotelId) query.hotelId = hotelId;
+  if (type) query.type = type;
+  if (capacity) query.capacity = { $gte: Number(capacity) };
+
+  const rooms = await Room.find(query).populate("hotelId");
+  res.json(rooms);
 };
 
-/* ---------------- GET SINGLE ROOM ---------------- */
-export const getRoomById = async (req: Request, res: Response) => {
-	try {
-		const room = await Room.findById(req.params.id).populate("hotelId");
-
-		if (!room) {
-			return res.status(404).json({ message: "Room not found" });
-		}
-
-		res.json(room);
-	} catch (_error) {
-		res.status(500).json({ message: "Failed to fetch room" });
-	}
+/* GET ONE */
+export const getRoomById: RequestHandler = async (req, res) => {
+  const room = await Room.findById(req.params.id).populate("hotelId");
+  if (!room) return res.status(404).json({ message: "Room not found" });
+  res.json(room);
 };
 
-/* ---------------- UPDATE ROOM ---------------- */
-export const updateRoom = async (req: Request, res: Response) => {
-	try {
-		const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-		});
+/* UPDATE */
+export const updateRoom: RequestHandler = async (req, res) => {
+  const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
 
-		res.json(room);
-	} catch (_error) {
-		res.status(400).json({ message: "Failed to update room" });
-	}
+  if (!room) return res.status(404).json({ message: "Room not found" });
+  res.json(room);
 };
 
-/* ---------------- DELETE ROOM ---------------- */
-export const deleteRoom = async (req: Request, res: Response) => {
-	try {
-		await Room.findByIdAndDelete(req.params.id);
-		res.json({ message: "Room deleted" });
-	} catch (_error) {
-		res.status(500).json({ message: "Failed to delete room" });
-	}
+/* SOFT DELETE */
+export const deleteRoom: RequestHandler = async (req, res) => {
+  await Room.findByIdAndUpdate(req.params.id, { isActive: false });
+  res.json({ message: "Room deactivated" });
 };

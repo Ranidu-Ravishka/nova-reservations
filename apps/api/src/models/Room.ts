@@ -2,18 +2,41 @@ import { model, Schema } from "mongoose";
 
 const RoomSchema = new Schema(
 	{
+		name: { type: String, required: true },
+
+		type: {
+			type: String,
+			enum: ["DELUXE", "PREMIUM", "PRESIDENTIAL", "SUITE"],
+			required: true,
+		},
+
+		description: { type: String },
+
 		hotelId: {
 			type: Schema.Types.ObjectId,
 			ref: "Hotel",
 			required: true,
 		},
 
-		name: { type: String, required: true },
-		description: String,
+		totalRooms: {
+			type: Number,
+			required: true,
+			min: 1,
+		},
 
-		pricePerNight: { type: Number, required: true },
-		size: String,
-		occupancy: Number,
+		capacity: {
+			type: Number,
+			required: true,
+			min: 1,
+		},
+
+		size: { type: String },
+
+		pricePerNight: {
+			type: Number,
+			required: true,
+			min: 0,
+		},
 
 		amenities: {
 			type: [String],
@@ -21,15 +44,15 @@ const RoomSchema = new Schema(
 		},
 
 		images: {
-			hero: { type: String },
-			listing: { type: String },
+			hero: String,
+			listing: String,
 			gallery: {
 				type: [String],
 				default: [],
 			},
 		},
 
-		isAvailable: {
+		isActive: {
 			type: Boolean,
 			default: true,
 		},
