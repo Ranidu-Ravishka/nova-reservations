@@ -1,18 +1,42 @@
 {
-	"extends": "@repo/typescript-config/nextjs.json",
+	"extends": "../../tsconfig.base.json",
+
 	"compilerOptions": {
-		"plugins": [
-			{
-				"name": "next"
-			}
-		]
+		/* Next.js */
+		"plugins": [{ "name": "next" }],
+		"jsx": "preserve",
+
+		/* Types */
+		"types": ["react", "react-dom", "node"],
+
+		/* Module resolution */
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./*", "./src/*"]
+		},
+
+		/* Type safety */
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"ignoreDeprecations": "5.0",
+
+		/* Build & DX */
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+
+		/* Output */
+		"noEmit": true
 	},
+
 	"include": [
+		"next-env.d.ts",
+		"app",
+		"components",
+		"lib",
 		"**/*.ts",
 		"**/*.tsx",
-		"next-env.d.ts",
-		"next.config.js",
 		".next/types/**/*.ts"
 	],
+
 	"exclude": ["node_modules"]
 }

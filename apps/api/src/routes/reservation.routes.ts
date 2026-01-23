@@ -1,26 +1,40 @@
 import { Router } from "express";
+import { Roles } from "../constants/roles";
 import {
+	cancelReservation,
 	createReservation,
-	deleteReservation,
+	getMyReservations,
+	getReservationById,
 	getReservations,
-	updateReservationStatus,
+	updateReservation,
 } from "../controllers/reservation.controller";
-import { authenticate } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/role.middleware";
+import { requireAuth } from "../middleware/auth.middleware";
+import { authorize } from "../middleware/role.middleware";
 
 const router = Router();
 
-// CUSTOMER creates reservation
-router.post("/", authenticate, authorize("CUSTOMER"), createReservation);
+/* CUSTOMER */
+router.post("/", requireAuth, authorize(Roles.CUSTOMER), createReservation);
 
-// STAFF + ADMIN manage reservations
-router.get("/", authenticate, authorize("ADMIN", "STAFF"), getReservations);
+router.get("/me", requireAuth, authorize(Roles.CUSTOMER), getMyReservations);
+
+router.get("/:id", requireAuth, getReservationById);
+
+router.post("/:id/cancel", requireAuth, cancelReservation);
+
+/* ADMIN / STAFF */
+router.get(
+	"/",
+	requireAuth,
+	authorize(Roles.ADMIN, Roles.STAFF),
+	getReservations,
+);
+
 router.put(
 	"/:id",
-	authenticate,
-	authorize("ADMIN", "STAFF"),
-	updateReservationStatus,
+	requireAuth,
+	authorize(Roles.ADMIN, Roles.STAFF),
+	updateReservation,
 );
-router.delete("/:id", authenticate, authorize("ADMIN"), deleteReservation);
 
 export default router;

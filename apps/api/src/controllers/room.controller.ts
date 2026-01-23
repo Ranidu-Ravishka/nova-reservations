@@ -1,35 +1,47 @@
-import type { Request, Response } from "express";
+import type { RequestHandler } from "express";
 import { Room } from "../models/Room";
 
-// CREATE room
-export const createRoom = async (req: Request, res: Response) => {
+/* CREATE */
+export const createRoom: RequestHandler = async (req, res) => {
 	const room = await Room.create(req.body);
 	res.status(201).json(room);
 };
 
-// GET rooms (optionally by hotel)
-export const getRooms = async (req: Request, res: Response) => {
-	const filter = req.query.hotelId ? { hotelId: req.query.hotelId } : {};
-	const rooms = await Room.find(filter).populate("hotelId");
+/* GET ALL (FILTERABLE) */
+export const getRooms: RequestHandler = async (req, res) => {
+	const { hotelId, type, capacity } = req.query;
+
+	const query: Record<string, unknown> = {
+		isActive: true,
+	};
+
+	if (hotelId) query.hotelId = hotelId;
+	if (type) query.type = type;
+	if (capacity) query.capacity = { $gte: Number(capacity) };
+
+	const rooms = await Room.find(query).populate("hotelId");
 	res.json(rooms);
 };
 
-// GET single room
-export const getRoomById = async (req: Request, res: Response) => {
+/* GET ONE */
+export const getRoomById: RequestHandler = async (req, res) => {
 	const room = await Room.findById(req.params.id).populate("hotelId");
+	if (!room) return res.status(404).json({ message: "Room not found" });
 	res.json(room);
 };
 
-// UPDATE room
-export const updateRoom = async (req: Request, res: Response) => {
+/* UPDATE */
+export const updateRoom: RequestHandler = async (req, res) => {
 	const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
 	});
+
+	if (!room) return res.status(404).json({ message: "Room not found" });
 	res.json(room);
 };
 
-// DELETE room
-export const deleteRoom = async (req: Request, res: Response) => {
-	await Room.findByIdAndDelete(req.params.id);
-	res.json({ message: "Room deleted" });
+/* SOFT DELETE */
+export const deleteRoom: RequestHandler = async (req, res) => {
+	await Room.findByIdAndUpdate(req.params.id, { isActive: false });
+	res.json({ message: "Room deactivated" });
 };

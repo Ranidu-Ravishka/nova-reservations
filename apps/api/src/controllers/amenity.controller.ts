@@ -13,3 +13,9 @@ export const deleteAmenity = async (req: Request, res: Response) => {
 	await Amenity.findByIdAndDelete(req.params.id);
 	res.json({ message: "Amenity deleted" });
 };
+
+export const updateAmenity = async (req: Request, res: Response) => {
+	res.json(
+		await Amenity.findByIdAndUpdate(req.params.id, req.body, { new: true }),
+	);
+};
