@@ -3,11 +3,28 @@ import { Server } from "socket.io";
 
 let io: Server;
 
+const DEFAULT_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+function getAllowedOrigins(): string[] {
+	const raw =
+		process.env.SOCKET_CORS_ORIGINS ||
+		process.env.CLIENT_ORIGIN ||
+		process.env.NEXT_PUBLIC_APP_URL ||
+		"";
+
+	const parsed = raw
+		.split(",")
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+
+	return parsed.length > 0 ? parsed : DEFAULT_ORIGINS;
+}
+
 /* ---------- INIT SOCKET ---------- */
 export function initSocket(server: HttpServer) {
 	io = new Server(server, {
 		cors: {
-			origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+			origin: getAllowedOrigins(),
 			methods: ["GET", "POST"],
 			credentials: true,
 		},
