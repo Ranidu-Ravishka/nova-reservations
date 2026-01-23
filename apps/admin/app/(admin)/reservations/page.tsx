@@ -34,7 +34,7 @@ import { socket } from "@/lib/socket";
 
 /* ---------------- TYPES ---------------- */
 
-type ReservationStatus = "CONFIRMED" | "CANCELLED";
+type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 
 interface Reservation {
 	_id: string;
@@ -42,16 +42,13 @@ interface Reservation {
 	checkIn: string;
 	checkOut: string;
 	totalPrice: number;
-	userId: {
-		name: string;
-		email: string;
+	userId?: {
+		name?: string;
+		email?: string;
 	};
-	roomId: {
-		name: string;
-		hotelId?: {
-			name: string;
-		};
-	};
+	hotelName?: string;
+	roomName?: string;
+	roomsBooked?: number;
 }
 
 /* ---------------- COMPONENT ---------------- */
@@ -145,6 +142,7 @@ export default function ReservationsPage() {
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="ALL">All</SelectItem>
+									<SelectItem value="PENDING">Pending</SelectItem>
 									<SelectItem value="CONFIRMED">Confirmed</SelectItem>
 									<SelectItem value="CANCELLED">Cancelled</SelectItem>
 								</SelectContent>
@@ -207,8 +205,8 @@ export default function ReservationsPage() {
 											</div>
 										</TableCell>
 
-										<TableCell>{r.roomId?.hotelId?.name || "—"}</TableCell>
-										<TableCell>{r.roomId?.name || "—"}</TableCell>
+										<TableCell>{r.hotelName || "—"}</TableCell>
+										<TableCell>{r.roomName || "—"}</TableCell>
 										<TableCell>
 											{new Date(r.checkIn).toLocaleDateString()} →{" "}
 											{new Date(r.checkOut).toLocaleDateString()}
@@ -216,7 +214,11 @@ export default function ReservationsPage() {
 										<TableCell>
 											<Badge
 												variant={
-													r.status === "CONFIRMED" ? "default" : "destructive"
+													r.status === "CONFIRMED"
+														? "default"
+														: r.status === "CANCELLED"
+															? "destructive"
+															: "secondary"
 												}
 											>
 												{r.status}
@@ -261,6 +263,7 @@ export default function ReservationsPage() {
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
+								<SelectItem value="PENDING">Pending</SelectItem>
 								<SelectItem value="CONFIRMED">Confirmed</SelectItem>
 								<SelectItem value="CANCELLED">Cancelled</SelectItem>
 							</SelectContent>

@@ -1,8 +1,10 @@
 import type { Request, Response } from "express";
 import { Hotel } from "../models/Hotel";
+import { Payment } from "../models/Payment";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
 import { countOverlappingReservations } from "../services/availability.service";
+import { getIO } from "../socket";
 
 /* ---------------- TYPES ---------------- */
 
@@ -93,6 +95,18 @@ export const createReservation = async (
 			paymentStatus: "UNPAID",
 		});
 
+		const bookedAfterCreate = await countOverlappingReservations(
+			room._id.toString(),
+			new Date(checkIn),
+			new Date(checkOut),
+		);
+
+		const io = getIO();
+		io.emit("availability:update", {
+			roomId: room._id.toString(),
+			remaining: room.totalRooms - bookedAfterCreate,
+		});
+
 		return res.status(201).json(reservation);
 	} catch (error) {
 		console.error("Create reservation error:", error);
@@ -109,12 +123,73 @@ export const getReservations = async (
 ) => {
 	try {
 		const reservations = await Reservation.find()
+			.populate("userId", "name email")
 			.sort({ createdAt: -1 })
 			.lean();
 
 		return res.json(reservations);
 	} catch (error) {
 		console.error("Get reservations error:", error);
+		return res.status(500).json({ message: "Failed to load reservations" });
+	}
+};
+
+/* =====================================================
+   GET SINGLE RESERVATION (OWNER / ADMIN / STAFF)
+===================================================== */
+export const getReservationById = async (
+	req: AuthenticatedRequest,
+	res: Response,
+) => {
+	try {
+		if (!req.user?.id) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const reservation = await Reservation.findById(req.params.id)
+			.populate("userId", "name email")
+			.lean();
+
+		if (!reservation) {
+			return res.status(404).json({ message: "Reservation not found" });
+		}
+
+		const role = req.user.role?.toUpperCase();
+		const ownerId =
+			typeof reservation.userId === "string"
+				? reservation.userId
+				: reservation.userId?._id?.toString();
+
+		if (ownerId !== req.user.id && !["ADMIN", "STAFF"].includes(role || "")) {
+			return res.status(403).json({ message: "Access denied" });
+		}
+
+		return res.json(reservation);
+	} catch (error) {
+		console.error("Get reservation error:", error);
+		return res.status(500).json({ message: "Failed to load reservation" });
+	}
+};
+
+/* =====================================================
+   GET MY RESERVATIONS (CUSTOMER)
+===================================================== */
+export const getMyReservations = async (
+	req: AuthenticatedRequest,
+	res: Response,
+) => {
+	try {
+		if (!req.user?.id) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const reservations = await Reservation.find({ userId: req.user.id })
+			.sort({ createdAt: -1 })
+			.lean();
+
+		return res.json(reservations);
+	} catch (error) {
+		console.error("Get my reservations error:", error);
 		return res.status(500).json({ message: "Failed to load reservations" });
 	}
 };
@@ -130,17 +205,122 @@ export const updateReservation = async (
 		const { id } = req.params;
 		const updates = req.body;
 
-		const reservation = await Reservation.findByIdAndUpdate(id, updates, {
-			new: true,
-		});
-
+		const reservation = await Reservation.findById(id);
 		if (!reservation) {
 			return res.status(404).json({ message: "Reservation not found" });
+		}
+
+		const previousStatus = reservation.status;
+		Object.assign(reservation, updates);
+		await reservation.save();
+
+		if (previousStatus !== reservation.status) {
+			const io = getIO();
+
+			if (
+				reservation.status === "CANCELLED" &&
+				reservation.paymentStatus === "PAID"
+			) {
+				reservation.paymentStatus = "REFUNDED";
+				await reservation.save();
+				await Payment.findOneAndUpdate(
+					{ reservationId: reservation._id, status: "PAID" },
+					{ status: "REFUNDED" },
+				);
+			}
+
+			const room = await Room.findById(reservation.roomId);
+			if (room) {
+				const booked = await countOverlappingReservations(
+					room._id.toString(),
+					reservation.checkIn,
+					reservation.checkOut,
+				);
+				io.emit("availability:update", {
+					roomId: room._id.toString(),
+					remaining: room.totalRooms - booked,
+				});
+			}
+
+			io.emit("reservation:status", {
+				id: reservation._id.toString(),
+				status: reservation.status,
+			});
 		}
 
 		return res.json(reservation);
 	} catch (error) {
 		console.error("Update reservation error:", error);
 		return res.status(500).json({ message: "Failed to update reservation" });
+	}
+};
+
+/* =====================================================
+   CANCEL RESERVATION (CUSTOMER / ADMIN)
+===================================================== */
+export const cancelReservation = async (
+	req: AuthenticatedRequest,
+	res: Response,
+) => {
+	try {
+		if (!req.user?.id) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const reservation = await Reservation.findById(req.params.id);
+		if (!reservation) {
+			return res.status(404).json({ message: "Reservation not found" });
+		}
+
+		const role = req.user.role?.toUpperCase();
+		const isOwner = reservation.userId.toString() === req.user.id;
+		const isAdmin = ["ADMIN", "STAFF"].includes(role || "");
+
+		if (!isOwner && !isAdmin) {
+			return res.status(403).json({ message: "Access denied" });
+		}
+
+		if (reservation.status === "CANCELLED") {
+			return res.json(reservation);
+		}
+
+		const now = new Date();
+		if (!isAdmin && reservation.checkIn <= now) {
+			return res.status(400).json({ message: "Cannot cancel after check-in" });
+		}
+
+		reservation.status = "CANCELLED";
+		if (reservation.paymentStatus === "PAID") {
+			reservation.paymentStatus = "REFUNDED";
+			await Payment.findOneAndUpdate(
+				{ reservationId: reservation._id, status: "PAID" },
+				{ status: "REFUNDED" },
+			);
+		}
+
+		await reservation.save();
+
+		const room = await Room.findById(reservation.roomId);
+		if (room) {
+			const booked = await countOverlappingReservations(
+				room._id.toString(),
+				reservation.checkIn,
+				reservation.checkOut,
+			);
+			const io = getIO();
+			io.emit("availability:update", {
+				roomId: room._id.toString(),
+				remaining: room.totalRooms - booked,
+			});
+			io.emit("reservation:status", {
+				id: reservation._id.toString(),
+				status: reservation.status,
+			});
+		}
+
+		return res.json(reservation);
+	} catch (error) {
+		console.error("Cancel reservation error:", error);
+		return res.status(500).json({ message: "Failed to cancel reservation" });
 	}
 };

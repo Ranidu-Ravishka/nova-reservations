@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { Roles } from "../constants/roles";
 import {
+	cancelReservation,
 	createReservation,
+	getMyReservations,
+	getReservationById,
 	getReservations,
 	updateReservation,
 } from "../controllers/reservation.controller";
@@ -12,6 +15,12 @@ const router = Router();
 
 /* CUSTOMER */
 router.post("/", requireAuth, authorize(Roles.CUSTOMER), createReservation);
+
+router.get("/me", requireAuth, authorize(Roles.CUSTOMER), getMyReservations);
+
+router.get("/:id", requireAuth, getReservationById);
+
+router.post("/:id/cancel", requireAuth, cancelReservation);
 
 /* ADMIN / STAFF */
 router.get(

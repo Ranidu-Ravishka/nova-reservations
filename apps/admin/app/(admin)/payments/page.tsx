@@ -21,8 +21,8 @@ type Payment = {
 	amount: number;
 	currency: string;
 	method: string;
-	status: "PENDING" | "PAID" | "FAILED";
-	userId: { name: string; email: string };
+	status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+	userId?: { name?: string; email?: string };
 	createdAt: string;
 };
 
@@ -79,8 +79,8 @@ export default function PaymentsPage() {
 						<TableBody>
 							{payments.map((p) => (
 								<TableRow key={p._id}>
-									<TableCell>{p.userId.name}</TableCell>
-									<TableCell>{p.userId.email}</TableCell>
+									<TableCell>{p.userId?.name || "—"}</TableCell>
+									<TableCell>{p.userId?.email || "—"}</TableCell>
 									<TableCell>
 										${p.amount} {p.currency}
 									</TableCell>

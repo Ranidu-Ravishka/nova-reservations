@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import paypal from "paypal-rest-sdk";
+import type { AuthRequest } from "../middleware/auth.middleware";
+import { Payment } from "../models/Payment";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
 import { countOverlappingReservations } from "../services/availability.service";
@@ -13,9 +15,21 @@ paypal.configure({
 	client_secret: process.env.PAYPAL_CLIENT_SECRET as string,
 });
 
+const WEB_BASE_URL = process.env.WEB_BASE_URL || "http://localhost:3000";
+
+type PayPalLink = {
+	rel?: string;
+	href?: string;
+};
+
+type PayPalPayment = {
+	id?: string;
+	links?: PayPalLink[];
+};
+
 /* ---------------- CREATE PAYPAL PAYMENT ---------------- */
 
-export const createPayment = async (req: Request, res: Response) => {
+export const createPayment = async (req: AuthRequest, res: Response) => {
 	try {
 		const { reservationId } = req.body;
 
@@ -28,6 +42,18 @@ export const createPayment = async (req: Request, res: Response) => {
 			return res.status(404).json({ message: "Reservation not found" });
 		}
 
+		const userId = req.user?.id;
+		const role = req.user?.role?.toUpperCase();
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		if (
+			reservation.userId.toString() !== userId &&
+			!["ADMIN", "STAFF"].includes(role || "")
+		) {
+			return res.status(403).json({ message: "Access denied" });
+		}
+
 		if (reservation.status !== "PENDING") {
 			return res.status(400).json({ message: "Reservation is not payable" });
 		}
@@ -36,8 +62,8 @@ export const createPayment = async (req: Request, res: Response) => {
 			intent: "sale",
 			payer: { payment_method: "paypal" },
 			redirect_urls: {
-				return_url: `http://localhost:3000/payment/success?reservation=${reservation._id}`,
-				cancel_url: `http://localhost:3000/payment/cancel`,
+				return_url: `${WEB_BASE_URL}/payments/success?reservation=${reservation._id}`,
+				cancel_url: `${WEB_BASE_URL}/payments/cancel?reservation=${reservation._id}`,
 			},
 			transactions: [
 				{
@@ -52,28 +78,32 @@ export const createPayment = async (req: Request, res: Response) => {
 
 		paypal.payment.create(
 			paymentJson,
-			async (
-				error: unknown,
-				payment:
-					| { id?: string; links?: { rel?: string; href?: string }[] }
-					| undefined,
-			) => {
+			async (error: unknown, payment: PayPalPayment) => {
 				if (error) {
 					console.error("PayPal create error:", error);
 					return res.status(500).json({ message: "PayPal payment failed" });
 				}
 
 				const approval = payment?.links?.find(
-					(link) => link.rel === "approval_url",
+					(link) => link?.rel === "approval_url",
 				);
 
-				if (!approval) {
+				if (!approval?.href || !payment?.id) {
 					return res.status(500).json({ message: "Approval URL not found" });
 				}
 
-				// ✅ SAVE PAYPAL PAYMENT ID
-				reservation.paymentId = payment?.id;
+				reservation.paymentId = payment.id;
 				await reservation.save();
+
+				await Payment.create({
+					reservationId: reservation._id,
+					userId: reservation.userId,
+					paypalPaymentId: payment.id,
+					amount: reservation.totalPrice,
+					currency: "USD",
+					method: "PAYPAL",
+					status: "PENDING",
+				});
 
 				return res.json({ approvalUrl: approval.href });
 			},
@@ -86,7 +116,7 @@ export const createPayment = async (req: Request, res: Response) => {
 
 /* ---------------- EXECUTE PAYPAL PAYMENT ---------------- */
 
-export const executePayment = async (req: Request, res: Response) => {
+export const executePayment = async (req: AuthRequest, res: Response) => {
 	try {
 		const { paymentId, PayerID, reservationId } = req.body;
 
@@ -100,6 +130,10 @@ export const executePayment = async (req: Request, res: Response) => {
 			async (error: unknown) => {
 				if (error) {
 					console.error("PayPal execute error:", error);
+					await Payment.findOneAndUpdate(
+						{ paypalPaymentId: paymentId },
+						{ status: "FAILED" },
+					);
 					return res.status(500).json({ message: "Payment execution failed" });
 				}
 
@@ -117,7 +151,6 @@ export const executePayment = async (req: Request, res: Response) => {
 					return res.status(404).json({ message: "Room not found" });
 				}
 
-				// 🔒 RECHECK AVAILABILITY
 				const booked = await countOverlappingReservations(
 					room._id.toString(),
 					reservation.checkIn,
@@ -125,24 +158,35 @@ export const executePayment = async (req: Request, res: Response) => {
 				);
 
 				const remaining = room.totalRooms - booked;
-
 				if (remaining < reservation.roomsBooked) {
+					await Payment.findOneAndUpdate(
+						{ paypalPaymentId: paymentId },
+						{ status: "FAILED" },
+					);
 					return res.status(409).json({
 						message: "Rooms sold out during payment processing",
 					});
 				}
 
-				// ✅ CONFIRM
 				reservation.status = "CONFIRMED";
 				reservation.paymentStatus = "PAID";
 				reservation.paymentId = paymentId;
 				await reservation.save();
 
-				// 🔌 SOCKET EVENT
+				await Payment.findOneAndUpdate(
+					{ paypalPaymentId: paymentId },
+					{ status: "PAID", payerId: PayerID },
+					{ new: true },
+				);
+
 				const io = getIO();
 				io.emit("availability:update", {
 					roomId: room._id.toString(),
-					remaining: remaining - reservation.roomsBooked,
+					remaining,
+				});
+				io.emit("reservation:status", {
+					id: reservation._id.toString(),
+					status: reservation.status,
 				});
 
 				return res.json({
@@ -159,9 +203,9 @@ export const executePayment = async (req: Request, res: Response) => {
 /* ---------------- ADMIN: GET PAYMENTS ---------------- */
 
 export const getPayments = async (_req: Request, res: Response) => {
-	const payments = await Reservation.find({ status: "CONFIRMED" })
-		.populate("roomId")
-		.populate("userId")
+	const payments = await Payment.find()
+		.populate("userId", "name email")
+		.populate("reservationId")
 		.sort({ createdAt: -1 });
 
 	res.json(payments);
