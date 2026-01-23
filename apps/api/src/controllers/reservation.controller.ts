@@ -1,141 +1,148 @@
 import type { Request, Response } from "express";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
-import { io } from "../server";
+import { Hotel } from "../models/Hotel";
 import { countOverlappingReservations } from "../services/availability.service";
 
-/* ---------------- EXTENDED REQUEST TYPE ---------------- */
+/* ---------------- TYPES ---------------- */
 
-interface AuthRequest extends Request {
-	user?: {
-		id: string;
-		role?: string;
-	};
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    role?: string;
+  };
 }
 
-/* ---------------- CREATE RESERVATION ---------------- */
+/* =====================================================
+   CREATE RESERVATION (CUSTOMER)
+===================================================== */
+export const createReservation = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-export const createReservation = async (req: AuthRequest, res: Response) => {
-	const { roomTypeId, checkIn, checkOut, roomsBooked } = req.body as {
-		roomTypeId: string;
-		checkIn: string;
-		checkOut: string;
-		roomsBooked: number;
-	};
+    const userId = req.user.id;
+    const { roomTypeId, checkIn, checkOut, roomsBooked } = req.body;
 
-	if (!req.user) {
-		return res.status(401).json({ message: "Not authenticated" });
-	}
+    if (!roomTypeId || !checkIn || !checkOut || !roomsBooked) {
+      return res.status(400).json({ message: "Missing booking data" });
+    }
 
-	if (!roomTypeId || !checkIn || !checkOut || !roomsBooked) {
-		return res.status(400).json({ message: "Missing booking data" });
-	}
+    /* 1️⃣ Load room */
+    const room = await Room.findById(roomTypeId);
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
 
-	const checkInDate = new Date(checkIn);
-	const checkOutDate = new Date(checkOut);
+    /* 2️⃣ Load hotel */
+    const hotel = await Hotel.findById(room.hotelId);
+    if (!hotel) {
+      return res.status(404).json({ message: "Hotel not found" });
+    }
 
-	if (checkInDate >= checkOutDate) {
-		return res.status(400).json({ message: "Invalid date range" });
-	}
+    /* 3️⃣ Availability check */
+    const booked = await countOverlappingReservations(
+      room._id.toString(),
+      new Date(checkIn),
+      new Date(checkOut)
+    );
 
-	const room = await Room.findById(roomTypeId);
-	if (!room || !room.isActive) {
-		return res.status(404).json({ message: "Room not available" });
-	}
+    const available = room.totalRooms - booked;
 
-	const alreadyBooked = await countOverlappingReservations(
-		room._id.toString(),
-		checkInDate,
-		checkOutDate,
-	);
+    if (available < roomsBooked) {
+      return res.status(409).json({
+        message: "Not enough rooms available",
+      });
+    }
 
-	const remainingRooms = room.totalRooms - alreadyBooked;
+    /* 4️⃣ Price calculation */
+    const nights =
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
+      (1000 * 60 * 60 * 24);
 
-	if (roomsBooked > remainingRooms) {
-		return res.status(409).json({
-			message: "Not enough rooms available",
-			remaining: remainingRooms,
-		});
-	}
+    if (nights <= 0) {
+      return res.status(400).json({ message: "Invalid dates" });
+    }
 
-	const nights =
-		(checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
+    const totalPrice = nights * room.pricePerNight * roomsBooked;
 
-	const totalPrice = nights * room.pricePerNight * roomsBooked;
+    /* 5️⃣ Create reservation */
+    const reservation = await Reservation.create({
+      userId,
 
-	const reservation = await Reservation.create({
-		userId: req.user.id,
-		roomId: room._id,
-		checkIn: checkInDate,
-		checkOut: checkOutDate,
-		roomsBooked,
-		totalPrice,
-		status: "CONFIRMED",
-	});
+      hotelId: hotel._id,
+      hotelName: hotel.name,
 
-	io.emit("availability:update", {
-		roomId: room._id.toString(),
-		remaining: remainingRooms - roomsBooked,
-	});
+      roomId: room._id,
+      roomName: room.name,
+      roomType: room.type,
 
-	return res.status(201).json({
-		reservation,
-		remainingAfterBooking: remainingRooms - roomsBooked,
-	});
+      roomsBooked,
+      checkIn,
+      checkOut,
+      nights,
+
+      pricePerNight: room.pricePerNight,
+      totalPrice,
+
+      status: "PENDING",
+      paymentStatus: "UNPAID",
+    });
+
+    return res.status(201).json(reservation);
+  } catch (error) {
+    console.error("Create reservation error:", error);
+    return res.status(500).json({ message: "Failed to create reservation" });
+  }
 };
 
-/* ---------------- GET USER RESERVATIONS ---------------- */
+/* =====================================================
+   GET RESERVATIONS (ADMIN / STAFF)
+===================================================== */
+export const getReservations = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const reservations = await Reservation.find()
+      .sort({ createdAt: -1 })
+      .lean();
 
-export const getReservations = async (req: AuthRequest, res: Response) => {
-	if (!req.user) {
-		return res.status(401).json({ message: "Not authenticated" });
-	}
-
-	// If ADMIN or STAFF, return all reservations; otherwise return user's
-	const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
-	const query = isPrivileged ? {} : { userId: req.user.id };
-
-	const reservations = await Reservation.find(query)
-		.populate("roomId")
-		.sort({ createdAt: -1 });
-
-	return res.json(reservations);
+    return res.json(reservations);
+  } catch (error) {
+    console.error("Get reservations error:", error);
+    return res.status(500).json({ message: "Failed to load reservations" });
+  }
 };
 
-/* ---------------- UPDATE RESERVATION STATUS ---------------- */
+/* =====================================================
+   UPDATE RESERVATION (ADMIN / STAFF)
+===================================================== */
+export const updateReservation = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
 
-export const updateReservation = async (req: AuthRequest, res: Response) => {
-	if (!req.user) {
-		return res.status(401).json({ message: "Not authenticated" });
-	}
+    const reservation = await Reservation.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true }
+    );
 
-	const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
-	if (!isPrivileged) {
-		return res.status(403).json({ message: "Forbidden" });
-	}
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
 
-	const { id } = req.params as { id: string };
-	const { status } = req.body as { status?: string };
-
-	if (!status || !["CONFIRMED", "CANCELLED"].includes(status)) {
-		return res.status(400).json({ message: "Invalid status" });
-	}
-
-	const reservation = await Reservation.findByIdAndUpdate(
-		id,
-		{ status },
-		{ new: true },
-	);
-
-	if (!reservation) {
-		return res.status(404).json({ message: "Reservation not found" });
-	}
-
-	// Emit a socket event so clients can update in real-time
-	io.emit("reservation:status", {
-		id: reservation._id.toString(),
-		status: reservation.status,
-	});
-
-	return res.json(reservation);
+    return res.json(reservation);
+  } catch (error) {
+    console.error("Update reservation error:", error);
+    return res.status(500).json({ message: "Failed to update reservation" });
+  }
 };

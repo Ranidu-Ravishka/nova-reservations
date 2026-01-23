@@ -14,6 +14,10 @@ const nextConfig = {
 				protocol: "https",
 				hostname: "movenpickresortcamranh.com",
 			},
+			{
+        protocol: "https",
+        hostname: "img.freepik.com",
+      }, 
 		],
 	},
 	async rewrites() {

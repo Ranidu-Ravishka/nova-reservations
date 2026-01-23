@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Roles } from "../constants/roles";
 import { UserModel } from "../models/User"; // adjust path if needed

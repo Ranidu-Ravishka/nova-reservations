@@ -8,7 +8,7 @@ import { checkRoomAvailability, createReservation } from "@/lib/api";
 import { type AvailabilityUpdatePayload, socket } from "@/lib/socket";
 import type { Room } from "@/types/room";
 
-export function RoomDetailSection({ room }: { room: Room }) {
+export default function RoomDetailSection({ room }: { room: Room }) {
 	const MotionImage = motion(Image);
 
 	const [checkIn, setCheckIn] = useState("");
@@ -90,30 +90,51 @@ export function RoomDetailSection({ room }: { room: Room }) {
 
 	/* 2️⃣ CONFIRM BOOKING */
 	const confirmBooking = async () => {
-		if (!summary) return;
+  if (!summary) return;
 
-		setLoading(true);
-		try {
-			await createReservation({
-				roomTypeId: room._id,
-				checkIn,
-				checkOut,
-				roomsBooked,
-				adults: room.capacity,
-			});
+  setLoading(true);
+  try {
+    // 1️⃣ Create reservation
+    const reservation = await createReservation({
+      roomTypeId: room._id,
+      checkIn,
+      checkOut,
+      roomsBooked,
+      adults: room.capacity,
+    });
 
-			alert(`Booking confirmed! Total: $${summary.totalPrice}`);
+    // 2️⃣ Create PayPal payment
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/payments`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          reservationId: reservation._id,
+        }),
+      },
+    );
 
-			setSummary(null);
-			setCheckIn("");
-			setCheckOut("");
-			setRoomsBooked(1);
-		} catch (err: unknown) {
-			setError(err instanceof Error ? err.message : "Booking failed");
-		} finally {
-			setLoading(false);
-		}
-	};
+    const data = await res.json();
+
+    if (!data.approvalUrl) {
+      throw new Error("PayPal approval URL missing");
+    }
+
+    // 3️⃣ Redirect to PayPal
+    window.location.href = data.approvalUrl;
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Payment initiation failed",
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 	return (
 		<>
@@ -220,3 +241,4 @@ export function RoomDetailSection({ room }: { room: Room }) {
 		</>
 	);
 }
+

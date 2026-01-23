@@ -5,8 +5,8 @@ import {
 	createTransportRequest,
 	getTransportRequests,
 } from "../controllers/transportRequest.controller";
-import { authenticate } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/role.middleware";
+import { requireAuth } from "../middleware/auth.middleware";
+import { authorize } from "../middleware/role.middleware";
 
 const router = Router();
 
@@ -14,6 +14,6 @@ const router = Router();
 router.post("/", createTransportRequest);
 
 // Admin: view all requests.
-router.get("/", authenticate, authorize(Roles.ADMIN), getTransportRequests);
+router.get("/", requireAuth, authorize(Roles.ADMIN), getTransportRequests);
 
 export default router;

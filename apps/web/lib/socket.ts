@@ -2,17 +2,16 @@
 
 import { io, type Socket } from "socket.io-client";
 
-/* ---------------- TYPES ---------------- */
 export interface AvailabilityUpdatePayload {
-	roomId: string;
-	remaining: number;
+  roomId: string;
+  remaining: number;
 }
 
-/* ---------------- SOCKET URL ---------------- */
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-/* ---------------- SINGLETON SOCKET INSTANCE ---------------- */
+/* ---------- SINGLETON SOCKET ---------- */
 export const socket: Socket = io(SOCKET_URL, {
-	autoConnect: true, // connect immediately
-	transports: ["websocket"], // use WebSocket only
+  autoConnect: false,      // ✅ IMPORTANT
+  transports: ["websocket"],
 });

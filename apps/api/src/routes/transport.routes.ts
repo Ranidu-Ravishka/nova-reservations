@@ -6,14 +6,14 @@ import {
 	getTransports,
 	updateTransport,
 } from "../controllers/transport.controller";
-import { authenticate } from "../middleware/auth.middleware";
+import { requireAuth } from "../middleware/auth.middleware";
 import { authorize } from "../middleware/role.middleware";
 
 const router = Router();
 
-router.post("/", authenticate, authorize(Roles.ADMIN), createTransport);
-router.delete("/:id", authenticate, authorize(Roles.ADMIN), deleteTransport);
+router.post("/", requireAuth, authorize(Roles.ADMIN), createTransport);
+router.delete("/:id", requireAuth, authorize(Roles.ADMIN), deleteTransport);
 router.get("/", getTransports);
-router.put("/:id", authenticate, authorize(Roles.ADMIN), updateTransport);
+router.put("/:id", requireAuth, authorize(Roles.ADMIN), updateTransport);
 
 export default router;
