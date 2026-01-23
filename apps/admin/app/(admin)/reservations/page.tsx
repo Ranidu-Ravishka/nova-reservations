@@ -7,6 +7,7 @@ import PageContainer from "@/components/admin/PageContainer";
 import PageHeader from "@/components/admin/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -123,6 +124,13 @@ export default function ReservationsPage() {
 		);
 	}, [reservations, statusFilter]);
 
+	const pendingCount = reservations.filter(
+		(r) => r.status === "PENDING",
+	).length;
+	const confirmedCount = reservations.filter(
+		(r) => r.status === "CONFIRMED",
+	).length;
+
 	return (
 		<PageContainer>
 			<PageHeader
@@ -137,7 +145,7 @@ export default function ReservationsPage() {
 									setStatusFilter(v as ReservationStatus | "ALL")
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-white/5 border-white/10">
 									<SelectValue placeholder="Filter status" />
 								</SelectTrigger>
 								<SelectContent>
@@ -154,6 +162,33 @@ export default function ReservationsPage() {
 					</div>
 				}
 			/>
+
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Total Reservations
+						</p>
+						<p className="text-3xl font-display mt-2">{reservations.length}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Pending
+						</p>
+						<p className="text-3xl font-display mt-2">{pendingCount}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Confirmed
+						</p>
+						<p className="text-3xl font-display mt-2">{confirmedCount}</p>
+					</CardContent>
+				</Card>
+			</div>
 
 			{error ? (
 				<EmptyState
@@ -176,9 +211,9 @@ export default function ReservationsPage() {
 			) : null}
 
 			{!error && (loading || filtered.length > 0) ? (
-				<div className="rounded-lg border bg-card">
+				<div className="luxury-panel rounded-2xl overflow-hidden">
 					{loading ? (
-						<div className="p-4 text-muted-foreground">
+						<div className="p-6 text-muted-foreground">
 							Loading reservations…
 						</div>
 					) : (
@@ -246,7 +281,7 @@ export default function ReservationsPage() {
 			{/* -------- STATUS MODAL -------- */}
 
 			<Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-				<DialogContent className="max-w-md">
+				<DialogContent className="max-w-md luxury-panel border-white/10">
 					<DialogHeader>
 						<DialogTitle>Update Reservation Status</DialogTitle>
 					</DialogHeader>

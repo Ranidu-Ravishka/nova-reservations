@@ -10,6 +10,7 @@ import PageContainer from "@/components/admin/PageContainer";
 import PageHeader from "@/components/admin/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -97,6 +98,13 @@ export default function TransportBookingsPage() {
 		loadServices();
 	}, [loadServices]);
 
+	const avgCapacity = services.length
+		? Math.round(
+				services.reduce((sum, service) => sum + service.capacity, 0) /
+					services.length,
+			)
+		: 0;
+
 	useEffect(() => {
 		if (!open) return;
 		reset({
@@ -165,6 +173,35 @@ export default function TransportBookingsPage() {
 				}
 			/>
 
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Services
+						</p>
+						<p className="text-3xl font-display mt-2">{services.length}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Average Capacity
+						</p>
+						<p className="text-3xl font-display mt-2">{avgCapacity}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Highest Price
+						</p>
+						<p className="text-3xl font-display mt-2">
+							${services.length ? Math.max(...services.map((s) => s.price)) : 0}
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
 			{error ? (
 				<EmptyState
 					title="Couldn’t load transport services"
@@ -191,9 +228,9 @@ export default function TransportBookingsPage() {
 			) : null}
 
 			{!error && (loading || services.length > 0) ? (
-				<div className="rounded-lg border bg-card">
+				<div className="luxury-panel rounded-2xl overflow-hidden">
 					{loading ? (
-						<div className="p-4 text-muted-foreground">
+						<div className="p-6 text-muted-foreground">
 							Loading transport services…
 						</div>
 					) : (
@@ -251,7 +288,7 @@ export default function TransportBookingsPage() {
 					if (!o) setSelected(null);
 				}}
 			>
-				<DialogContent className="max-w-md">
+				<DialogContent className="max-w-md luxury-panel border-white/10">
 					<DialogHeader>
 						<DialogTitle>
 							{selected?._id ? "Edit Service" : "Add Service"}
@@ -266,7 +303,7 @@ export default function TransportBookingsPage() {
 									setValue("type", value, { shouldValidate: true })
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-white/5 border-white/10">
 									<SelectValue placeholder="Select type" />
 								</SelectTrigger>
 								<SelectContent>

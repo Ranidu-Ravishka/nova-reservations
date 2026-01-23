@@ -12,10 +12,10 @@ export default function EmptyState({
 	action?: ReactNode;
 }) {
 	return (
-		<div className="rounded-lg border bg-background p-8 text-center">
-			<h2 className="text-base font-semibold">{title}</h2>
+		<div className="luxury-panel rounded-2xl p-8 text-center">
+			<h2 className="text-lg font-display font-semibold">{title}</h2>
 			{description ? (
-				<p className="mt-1 text-sm text-muted-foreground">{description}</p>
+				<p className="mt-2 text-sm text-muted-foreground">{description}</p>
 			) : null}
 			{action ? <div className="mt-4 flex justify-center">{action}</div> : null}
 		</div>

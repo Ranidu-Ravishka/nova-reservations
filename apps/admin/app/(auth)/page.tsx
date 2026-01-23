@@ -6,7 +6,7 @@ export default function AdminLoginPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="w-full max-w-sm rounded-lg border bg-background p-8 text-center text-sm text-muted-foreground">
+				<div className="w-full max-w-md rounded-2xl luxury-panel p-8 text-center text-sm text-muted-foreground">
 					Loading…
 				</div>
 			}

@@ -12,7 +12,7 @@ This workspace hosts three primary applications:
 - apps/admin – Admin dashboard (Next.js) for managing hotels, rooms, reservations
 - apps/web – Customer-facing site (Next.js) with booking flow and live availability
 
-### New Enhancements
+### Recent Enhancements
 
 - Admin dashboard metrics endpoint `/api/admin/dashboard` integrated and consumed
 - Admin tables: search/filter for Rooms & Reservations, improved loading states
@@ -217,6 +217,19 @@ Available route groups (REST):
 - `/availability`
 
 Authentication uses JWT (`Authorization: Bearer <token>`); admin-only routes enforce role checks via RBAC middleware.
+
+## Team
+
+| ID | Name | Email | Responsibility |
+| --- | --- | --- | --- |
+| 10953038 | Ranabahu Ranabahu | 10953038@students.plymouth.ac.uk | CI/CD Pipeline & Deployment Logs |
+| 10953013 | Piyara Morawakaarachchi | 10953013@students.plymouth.ac.uk | Real-Time Booking Status Updates |
+| 10953016 | Ekanayake Ekanayake | 10953016@students.plymouth.ac.uk | Room Management |
+| 10952878 | Nanayakkara Imasha | 10952878@students.plymouth.ac.uk | Room Search & Availability |
+| 10952754 | Pattivila Perera | 10952754@students.plymouth.ac.uk | Testing & Validation |
+| 10952995 | Mahayahage Navodya | 10952995@students.plymouth.ac.uk | Booking & Reservation Management |
+| 10953673 | Sinethmi Kariyawasam | 10953673@students.plymouth.ac.uk | System Architecture |
+| 10953598 | Shavishka Gamage | 10953598@students.plymouth.ac.uk | User Registration, Login & Security |
 
 ## Contributing
 

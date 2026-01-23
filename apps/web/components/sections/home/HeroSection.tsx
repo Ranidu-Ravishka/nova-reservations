@@ -29,7 +29,7 @@ export default function HeroSection() {
 				className="absolute inset-0 bg-cover bg-center bg-no-repeat"
 				style={{
 					backgroundImage:
-						"url('https://images.unsplash.com/photo-1621293954908-907159247fc8?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+						"url('https://content.r9cdn.net/rimg/himg/25/e5/bb/leonardo-1071749917-1685286-186022.jpg')",
 				}}
 			>
 				<div className="absolute inset-0 bg-linear-to-b from-charcoal/60 via-charcoal/40 to-charcoal/80" />
@@ -43,7 +43,7 @@ export default function HeroSection() {
 					transition={{ duration: baseDuration, delay: 0.2 }}
 					className="mb-6"
 				>
-					<span className="text-rose-300 text-sm tracking-[0.3em] uppercase font-medium">
+					<span className="text-stone-200 text-sm tracking-[0.3em] uppercase font-medium">
 						Welcome to
 					</span>
 				</motion.div>
@@ -54,10 +54,10 @@ export default function HeroSection() {
 					initial="hidden"
 					animate="visible"
 					transition={{ duration: baseDuration, delay: 0.4 }}
-					className="text-5xl md:text-7xl lg:text-8xl font-serif font-semibold text-rose-300 mb-6 text-balance"
+					className="text-5xl md:text-7xl lg:text-8xl font-serif font-semibold text-stone-200 mb-6 text-balance"
 				>
 					Nova Reservations
-					<span className="block text-rose-300">Group</span>
+					<span className="block text-stone-200">Group</span>
 				</motion.h1>
 
 				<motion.p
@@ -65,7 +65,7 @@ export default function HeroSection() {
 					initial="hidden"
 					animate="visible"
 					transition={{ duration: baseDuration, delay: 0.6 }}
-					className="text-xl md:text-2xl text-rose-300 font-light max-w-2xl mx-auto mb-10 text-pretty"
+					className="text-xl md:text-2xl text-stone-200 font-light max-w-2xl mx-auto mb-10 text-pretty"
 				>
 					Experience unparalleled luxury across four stunning destinations in
 					Sri Lanka
@@ -81,7 +81,7 @@ export default function HeroSection() {
 					<Link href="/hotels">
 						<Button
 							size="lg"
-							className="bg-rose-300 text-charcoal hover:bg-rose-200 font-medium px-8 py-6 text-base rounded-full"
+							className="bg-stone-200 text-charcoal hover:bg-stone-300 font-medium px-8 py-6 text-base rounded-full"
 						>
 							Explore Our Hotels
 						</Button>
