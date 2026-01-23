@@ -58,6 +58,7 @@ function RegisterContent() {
 	const [error, setError] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [checkingAuth, setCheckingAuth] = useState(true);
 
 	const [form, setForm] = useState({
 		name: "",
@@ -72,19 +73,46 @@ function RegisterContent() {
 		confirmPassword: false,
 	});
 
-	const redirect = searchParams.get("redirect") || "/";
+	const redirect = useMemo(() => {
+		const raw = searchParams.get("redirect") || "/";
+		if (!raw.startsWith("/")) return "/";
+		if (raw.startsWith("/login") || raw.startsWith("/register")) return "/";
+		return raw;
+	}, [searchParams]);
 	const fieldErrors = useMemo(() => getRegisterErrors(form), [form]);
 
 	useEffect(() => {
-		const token = localStorage.getItem("token");
-		if (token) {
-			router.replace(redirect);
+		try {
+			const token = localStorage.getItem("token");
+			const storedUser = localStorage.getItem("user");
+			if (token && storedUser) {
+				const parsed = JSON.parse(storedUser) as {
+					email?: string;
+					name?: string;
+					role?: string;
+				} | null;
+				if (parsed?.email && parsed?.name && parsed?.role) {
+					router.replace(redirect);
+					return;
+				}
+			}
+		} catch {
+			// ignore parse/storage errors
 		}
+		try {
+			localStorage.removeItem("token");
+			localStorage.removeItem("user");
+		} catch {
+			// ignore storage errors
+		}
+		setCheckingAuth(false);
 	}, [redirect, router]);
 
 	useEffect(() => {
-		nameRef.current?.focus();
-	}, []);
+		if (!checkingAuth) {
+			nameRef.current?.focus();
+		}
+	}, [checkingAuth]);
 
 	const submit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -138,6 +166,14 @@ function RegisterContent() {
 			setLoading(false);
 		}
 	};
+
+	if (checkingAuth) {
+		return (
+			<div className="min-h-screen pt-24 flex items-center justify-center bg-charcoal">
+				<div className="text-white">Loading...</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="relative min-h-screen pt-24 flex items-center justify-center overflow-hidden bg-charcoal">
