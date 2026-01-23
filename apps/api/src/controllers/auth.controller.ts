@@ -18,7 +18,14 @@ export const login = async (req: Request, res: Response) => {
 			return res.status(401).json({ message: "Invalid credentials" });
 		}
 
-		const isMatch = await user.comparePassword(password);
+		// typed interface for user instance method
+		interface UserWithMethods {
+			comparePassword(password: string): Promise<boolean>;
+		}
+
+		const isMatch = await (user as unknown as UserWithMethods).comparePassword(
+			password,
+		);
 
 		if (!isMatch) {
 			return res.status(401).json({ message: "Invalid credentials" });

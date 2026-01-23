@@ -4,18 +4,18 @@ import { fetchRoomById } from "@/lib/api";
 import type { Room } from "@/types/room";
 
 export default async function RoomPage({
-  params,
+	params,
 }: {
-  params: Promise<{ id: string }>;
+	params: Promise<{ id: string }>;
 }) {
-  // ✅ REQUIRED IN NEXT 15
-  const { id } = await params;
+	// ✅ REQUIRED IN NEXT 15
+	const { id } = await params;
 
-  if (!id) notFound();
+	if (!id) notFound();
 
-  const room: Room | null = await fetchRoomById(id);
+	const room: Room | null = await fetchRoomById(id);
 
-  if (!room) notFound();
+	if (!room) notFound();
 
-  return <RoomDetailSection room={room} />;
+	return <RoomDetailSection room={room} />;
 }

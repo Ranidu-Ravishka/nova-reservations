@@ -90,51 +90,50 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 
 	/* 2️⃣ CONFIRM BOOKING */
 	const confirmBooking = async () => {
-  if (!summary) return;
+		if (!summary) return;
 
-  setLoading(true);
-  try {
-    // 1️⃣ Create reservation
-    const reservation = await createReservation({
-      roomTypeId: room._id,
-      checkIn,
-      checkOut,
-      roomsBooked,
-      adults: room.capacity,
-    });
+		setLoading(true);
+		try {
+			// 1️⃣ Create reservation
+			const reservation = await createReservation({
+				roomTypeId: room._id,
+				checkIn,
+				checkOut,
+				roomsBooked,
+				adults: room.capacity,
+			});
 
-    // 2️⃣ Create PayPal payment
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/payments`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          reservationId: reservation._id,
-        }),
-      },
-    );
+			// 2️⃣ Create PayPal payment
+			const res = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/payments`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${localStorage.getItem("token")}`,
+					},
+					body: JSON.stringify({
+						reservationId: reservation._id,
+					}),
+				},
+			);
 
-    const data = await res.json();
+			const data = await res.json();
 
-    if (!data.approvalUrl) {
-      throw new Error("PayPal approval URL missing");
-    }
+			if (!data.approvalUrl) {
+				throw new Error("PayPal approval URL missing");
+			}
 
-    // 3️⃣ Redirect to PayPal
-    window.location.href = data.approvalUrl;
-  } catch (err) {
-    setError(
-      err instanceof Error ? err.message : "Payment initiation failed",
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
+			// 3️⃣ Redirect to PayPal
+			window.location.href = data.approvalUrl;
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : "Payment initiation failed",
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	return (
 		<>
@@ -241,4 +240,3 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 		</>
 	);
 }
-

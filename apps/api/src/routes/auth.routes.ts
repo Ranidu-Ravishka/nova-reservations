@@ -80,8 +80,7 @@ router.post("/register", async (req, res) => {
  */
 router.post("/login", async (req, res) => {
 	try {
-		const { name, email, password } = req.body as {
-			name?: string;
+		const { email, password } = req.body as {
 			email?: string;
 			password?: string;
 		};

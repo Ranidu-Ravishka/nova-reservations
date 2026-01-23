@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {
-  createPayment,
-  executePayment,
-  getPayments,
+	createPayment,
+	executePayment,
+	getPayments,
 } from "../controllers/payment.controller";
 import { requireAuth } from "../middleware/auth.middleware";
 
