@@ -3,9 +3,8 @@
 import { ChevronDown, LogOut, Menu, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AvailabilitySearch } from "@/components/navbar/AvailabilitySearch";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -30,15 +29,40 @@ type UserType = {
 	role: string;
 };
 
+type NavLink = {
+	href: string;
+	label: string;
+};
+
+const NAV_LINKS: NavLink[] = [
+	{ href: "/", label: "Home" },
+	{ href: "/rooms", label: "Rooms" },
+	{ href: "/transport", label: "Transport" },
+	{ href: "/contact", label: "Contact" },
+];
+
+const LOADING_SKELETON_KEYS = [
+	"hotel-loading-1",
+	"hotel-loading-2",
+	"hotel-loading-3",
+	"hotel-loading-4",
+];
+
 /* ---------------- COMPONENT ---------------- */
 
 export function Header() {
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [hotels, setHotels] = useState<Hotel[]>([]);
+	const [hotelsLoading, setHotelsLoading] = useState(true);
 	const [user, setUser] = useState<UserType | null>(null);
 	const router = useRouter();
+	const pathname = usePathname();
 
 	const hotelsPreview = useMemo(() => hotels.slice(0, 6), [hotels]);
+	const userInitial = useMemo(() => {
+		const initial = user?.name?.trim()?.[0];
+		return initial ? initial.toUpperCase() : "U";
+	}, [user]);
 
 	/* ---------------- SCROLL EFFECT ---------------- */
 
@@ -52,12 +76,20 @@ export function Header() {
 
 	useEffect(() => {
 		const storedUser = localStorage.getItem("user");
-		if (storedUser) {
-			setUser(JSON.parse(storedUser));
+		if (!storedUser) return;
+		try {
+			const parsed = JSON.parse(storedUser) as Partial<UserType> | null;
+			if (parsed?.name && parsed?.email && parsed?.role) {
+				setUser(parsed as UserType);
+			} else {
+				localStorage.removeItem("user");
+			}
+		} catch {
+			localStorage.removeItem("user");
 		}
 	}, []);
 
-	/* ---------------- LOAD HOTELS (FIXED) ---------------- */
+	/* ---------------- LOAD HOTELS ---------------- */
 
 	useEffect(() => {
 		let cancelled = false;
@@ -71,6 +103,8 @@ export function Header() {
 			} catch (err) {
 				// Keep header usable even if API is down.
 				console.error(err);
+			} finally {
+				if (!cancelled) setHotelsLoading(false);
 			}
 		})();
 
@@ -90,14 +124,23 @@ export function Header() {
 
 	const linkBase =
 		"text-sm font-medium text-ivory/80 transition-colors hover:text-ivory";
+	const linkActive = "text-ivory";
+
+	const isActive = (href: string) => {
+		if (href === "/") return pathname === "/";
+		return pathname.startsWith(href);
+	};
+
+	const navLinkClass = (href: string) =>
+		`${linkBase} ${isActive(href) ? linkActive : ""}`.trim();
 
 	return (
 		<header
 			className={
-				"fixed inset-x-0 top-0 z-50 transition-all " +
+				"fixed inset-x-0 top-0 z-50 transition-all duration-300 " +
 				(isScrolled
-					? "bg-charcoal/90 backdrop-blur-xl border-b border-white/10"
-					: "bg-transparent")
+					? "bg-charcoal/90 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20"
+					: "bg-transparent shadow-none")
 			}
 		>
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -121,68 +164,76 @@ export function Header() {
 					</Link>
 
 					{/* Desktop nav */}
-					<div className="hidden lg:flex flex-1 items-center justify-center gap-8">
-						<Link href="/" className={linkBase}>
-							Home
-						</Link>
-
+					<nav
+						className="hidden lg:flex flex-1 items-center justify-center gap-8"
+						aria-label="Primary"
+					>
+						{NAV_LINKS.map((link) => (
+							<Link
+								key={link.href}
+								href={link.href}
+								className={navLinkClass(link.href)}
+								aria-current={isActive(link.href) ? "page" : undefined}
+							>
+								{link.label}
+							</Link>
+						))}
 						<Popover>
 							<PopoverTrigger asChild>
 								<button
 									type="button"
-									className={
-										linkBase +
-										" inline-flex items-center gap-1 rounded-full px-3 py-2 hover:bg-white/5"
-									}
+									className={`${linkBase} inline-flex items-center gap-1`}
 									aria-label="Open hotels menu"
 								>
-									Our Hotels <ChevronDown className="h-4 w-4 opacity-80" />
+									Hotels
+									<ChevronDown className="h-4 w-4 opacity-70" />
 								</button>
 							</PopoverTrigger>
 							<PopoverContent
-								align="start"
-								sideOffset={10}
+								align="center"
+								sideOffset={12}
 								className="w-80 p-2 glass-dark text-ivory border-white/10 rounded-2xl shadow-2xl"
 							>
-								<div className="px-2 py-2">
-									<p className="text-xs tracking-[0.25em] uppercase text-ivory/60">
-										Destinations
+								<div className="px-3 py-2">
+									<p className="text-xs uppercase tracking-[0.2em] text-ivory/50">
+										Explore hotels
 									</p>
+								</div>
+								<div className="px-2 pb-2">
 									<Link
 										href="/hotels"
-										className="mt-2 block rounded-xl px-3 py-2 text-sm font-medium text-ivory hover:bg-white/5 hover:text-gold"
+										className="block rounded-xl px-3 py-2 text-sm text-ivory/90 hover:bg-white/5"
 									>
 										View all hotels
 									</Link>
-								</div>
-								<div className="max-h-72 overflow-auto px-1 pb-1">
-									{hotels.map((hotel) => (
-										<Link
-											key={hotel._id}
-											href={`/hotels/${hotel._id}`}
-											className="block rounded-xl px-3 py-2 text-sm text-ivory/90 hover:bg-white/5 hover:text-gold"
-										>
-											{hotel.name}
-										</Link>
-									))}
+									{hotelsLoading ? (
+										<div className="mt-2 space-y-2 px-3 pb-2">
+											{LOADING_SKELETON_KEYS.map((key) => (
+												<div
+													key={key}
+													className="h-3 rounded-full bg-white/10 animate-pulse"
+												/>
+											))}
+										</div>
+									) : hotelsPreview.length > 0 ? (
+										hotelsPreview.map((hotel) => (
+											<Link
+												key={hotel._id}
+												href={`/hotels/${hotel._id}`}
+												className="block rounded-xl px-3 py-2 text-sm text-ivory/80 hover:bg-white/5 hover:text-gold"
+											>
+												{hotel.name}
+											</Link>
+										))
+									) : (
+										<p className="px-3 py-2 text-xs text-ivory/60">
+											No hotels available right now.
+										</p>
+									)}
 								</div>
 							</PopoverContent>
 						</Popover>
-
-						<Link href="/rooms" className={linkBase}>
-							Rooms
-						</Link>
-						<Link href="/transport" className={linkBase}>
-							Transport
-						</Link>
-						<Link href="/contact" className={linkBase}>
-							Contact
-						</Link>
-
-						<div className="ml-2">
-							<AvailabilitySearch hotels={hotels} />
-						</div>
-					</div>
+					</nav>
 
 					{/* Desktop actions */}
 					<div className="hidden lg:flex items-center gap-3">
@@ -212,7 +263,7 @@ export function Header() {
 											aria-label="Open user menu"
 										>
 											<span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-xs font-semibold">
-												{user.name?.slice(0, 1).toUpperCase()}
+												{userInitial}
 											</span>
 											<span className="max-w-35 truncate underline-offset-2 hover:underline">
 												{user.name}
@@ -282,14 +333,21 @@ export function Header() {
 									</SheetHeader>
 
 									<div className="mt-6 grid gap-2">
-										<SheetClose asChild>
-											<Link
-												href="/"
-												className="rounded-xl px-3 py-3 text-sm font-medium text-ivory hover:bg-white/5"
-											>
-												Home
-											</Link>
-										</SheetClose>
+										{NAV_LINKS.map((link) => (
+											<SheetClose asChild key={link.href}>
+												<Link
+													href={link.href}
+													className={`rounded-xl px-3 py-3 text-sm font-medium text-ivory hover:bg-white/5 ${
+														isActive(link.href) ? "bg-white/10" : ""
+													}`}
+													aria-current={
+														isActive(link.href) ? "page" : undefined
+													}
+												>
+													{link.label}
+												</Link>
+											</SheetClose>
+										))}
 
 										<details className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
 											<summary className="flex cursor-pointer list-none items-center justify-between py-1 text-sm font-medium text-ivory">
@@ -305,45 +363,33 @@ export function Header() {
 														All hotels
 													</Link>
 												</SheetClose>
-												{hotelsPreview.map((hotel) => (
-													<SheetClose asChild key={hotel._id}>
-														<Link
-															href={`/hotels/${hotel._id}`}
-															className="rounded-lg px-2 py-2 text-sm text-ivory/80 hover:bg-white/5 hover:text-gold"
-														>
-															{hotel.name}
-														</Link>
-													</SheetClose>
-												))}
+												{hotelsLoading ? (
+													<div className="space-y-2 px-2 pb-2">
+														{LOADING_SKELETON_KEYS.map((key) => (
+															<div
+																key={key}
+																className="h-3 rounded-full bg-white/10 animate-pulse"
+															/>
+														))}
+													</div>
+												) : hotelsPreview.length > 0 ? (
+													hotelsPreview.map((hotel) => (
+														<SheetClose asChild key={hotel._id}>
+															<Link
+																href={`/hotels/${hotel._id}`}
+																className="rounded-lg px-2 py-2 text-sm text-ivory/80 hover:bg-white/5 hover:text-gold"
+															>
+																{hotel.name}
+															</Link>
+														</SheetClose>
+													))
+												) : (
+													<p className="px-2 py-2 text-xs text-ivory/60">
+														No hotels available right now.
+													</p>
+												)}
 											</div>
 										</details>
-
-										<SheetClose asChild>
-											<Link
-												href="/rooms"
-												className="rounded-xl px-3 py-3 text-sm font-medium text-ivory hover:bg-white/5"
-											>
-												Rooms
-											</Link>
-										</SheetClose>
-
-										<SheetClose asChild>
-											<Link
-												href="/transport"
-												className="rounded-xl px-3 py-3 text-sm font-medium text-ivory hover:bg-white/5"
-											>
-												Transport
-											</Link>
-										</SheetClose>
-
-										<SheetClose asChild>
-											<Link
-												href="/contact"
-												className="rounded-xl px-3 py-3 text-sm font-medium text-ivory hover:bg-white/5"
-											>
-												Contact
-											</Link>
-										</SheetClose>
 									</div>
 
 									<div className="mt-6 grid gap-3 border-t border-white/10 pt-6">
@@ -372,7 +418,7 @@ export function Header() {
 												<div className="rounded-2xl border border-white/10 bg-white/5 p-4">
 													<div className="flex items-center gap-3">
 														<span className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-sm font-semibold">
-															{user.name?.slice(0, 1).toUpperCase()}
+															{userInitial}
 														</span>
 														<div className="min-w-0">
 															<p className="truncate text-sm font-medium text-ivory">

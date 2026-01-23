@@ -59,9 +59,9 @@ export type UserSchemaType = InferSchemaType<typeof userSchema>;
 userSchema.pre(
 	"save",
 	async function (this: HydratedDocument<UserSchemaType, UserMethods>) {
-	if (!this.isModified("password")) return;
+		if (!this.isModified("password")) return;
 
-	const salt = await bcrypt.genSalt(10);
+		const salt = await bcrypt.genSalt(10);
 		this.password = await bcrypt.hash(this.password, salt);
 	},
 );
@@ -75,10 +75,7 @@ userSchema.methods.comparePassword = async function (
 };
 
 /* ---------- MODEL ---------- */
-export const UserModel = model<UserBase, UserModelType>(
-	"User",
-	userSchema,
-);
+export const UserModel = model<UserBase, UserModelType>("User", userSchema);
 
 /* Optional default export (only if you really need it) */
 export default UserModel;

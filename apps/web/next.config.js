@@ -8,6 +8,10 @@ const nextConfig = {
 			},
 			{
 				protocol: "https",
+				hostname: "dynamic-media-cdn.tripadvisor.com",
+			},
+			{
+				protocol: "https",
 				hostname: "**.cloudfront.net",
 			},
 			{
