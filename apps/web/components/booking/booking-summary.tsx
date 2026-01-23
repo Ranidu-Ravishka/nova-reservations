@@ -4,12 +4,8 @@ import { Button } from "@/components/ui/button";
 
 type Reservation = {
 	_id: string;
-	roomId: {
-		name: string;
-		hotelId: {
-			name: string;
-		};
-	};
+	hotelName: string;
+	roomName: string;
 	checkIn: string;
 	checkOut: string;
 	totalPrice: number;
@@ -26,7 +22,7 @@ type CreatePaymentResponse = {
 export default function BookingSummary({ reservation }: BookingSummaryProps) {
 	const payWithPaypal = async () => {
 		const token = localStorage.getItem("token");
-		const res = await fetch("/api/payments/create", {
+		const res = await fetch("/api/payments", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -49,16 +45,16 @@ export default function BookingSummary({ reservation }: BookingSummaryProps) {
 	};
 
 	return (
-		<div className="min-h-screen bg-cream pt-28">
-			<div className="mx-auto max-w-xl bg-white p-8 rounded-2xl shadow">
+		<div className="min-h-screen bg-purple-950 pt-28">
+			<div className="mx-auto max-w-xl bg-purple-800 p-8 rounded-2xl shadow">
 				<h1 className="text-2xl font-serif mb-6">Reservation Summary</h1>
 
 				<div className="space-y-2 text-sm">
 					<p>
-						<strong>Hotel:</strong> {reservation.roomId.hotelId.name}
+						<strong>Hotel:</strong> {reservation.hotelName}
 					</p>
 					<p>
-						<strong>Room:</strong> {reservation.roomId.name}
+						<strong>Room:</strong> {reservation.roomName}
 					</p>
 					<p>
 						<strong>Check-in:</strong> {reservation.checkIn}

@@ -30,7 +30,7 @@ function PaymentSuccessContent() {
 				reservationId,
 			}),
 		})
-			.then(() => router.push("/profile/reservations"))
+			.then(() => router.push(`/booking/confirmation/${reservationId}`))
 			.catch(() => router.push("/profile/reservations"));
 	}, [params, router]);
 

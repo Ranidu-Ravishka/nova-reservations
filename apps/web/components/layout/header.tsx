@@ -214,7 +214,9 @@ export function Header() {
 											<span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-xs font-semibold">
 												{user.name?.slice(0, 1).toUpperCase()}
 											</span>
-											<span className="max-w-35 truncate">{user.name}</span>
+											<span className="max-w-35 truncate underline-offset-2 hover:underline">
+												{user.name}
+											</span>
 											<ChevronDown className="h-4 w-4 opacity-70" />
 										</button>
 									</PopoverTrigger>
@@ -234,10 +236,10 @@ export function Header() {
 										</div>
 										<div className="px-2 pb-2">
 											<Link
-												href="/booking"
+												href="/profile/reservations"
 												className="block rounded-xl px-3 py-2 text-sm text-ivory/90 hover:bg-white/5"
 											>
-												My bookings
+												My reservations
 											</Link>
 											<button
 												type="button"
@@ -254,7 +256,7 @@ export function Header() {
 									asChild
 									className="rounded-full bg-amber text-charcoal hover:bg-amber/90"
 								>
-									<Link href="/booking">Book now</Link>
+									<Link href="/rooms">Book now</Link>
 								</Button>
 							</div>
 						)}

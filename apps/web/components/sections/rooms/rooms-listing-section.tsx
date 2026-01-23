@@ -54,6 +54,10 @@ export function RoomsListingSection() {
 
 	// Listen for live availability updates
 	useEffect(() => {
+		if (!socket.connected) {
+			socket.connect();
+		}
+
 		const handler = (payload: { roomId: string; remaining: number }) => {
 			setAvailabilityByRoom((prev) => ({
 				...prev,
