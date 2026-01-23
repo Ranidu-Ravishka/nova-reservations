@@ -67,9 +67,12 @@ export default function AdminLoginClient() {
 	}
 
 	return (
-		<Card className="w-full max-w-sm shadow-sm">
-			<CardHeader>
-				<CardTitle>Admin Login</CardTitle>
+		<Card className="w-full max-w-md luxury-panel rounded-2xl border border-white/10">
+			<CardHeader className="space-y-2">
+				<CardTitle className="font-display text-2xl">Admin Login</CardTitle>
+				<p className="text-sm text-muted-foreground">
+					Secure access for executive operations and guest excellence.
+				</p>
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -110,7 +113,7 @@ export default function AdminLoginClient() {
 								Signing in…
 							</>
 						) : (
-							"Sign in"
+							"Enter Console"
 						)}
 					</Button>
 				</form>

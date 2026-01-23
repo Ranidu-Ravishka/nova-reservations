@@ -158,10 +158,14 @@ export default function RoomForm({
 	};
 
 	return (
-		<form onSubmit={handleSubmit(submit)} className="space-y-4">
+		<form onSubmit={handleSubmit(submit)} className="space-y-5">
 			<div className="space-y-2">
 				<Label>Room name</Label>
-				<Input placeholder="Room name" {...register("name")} />
+				<Input
+					className="bg-white/5 border-white/10"
+					placeholder="Room name"
+					{...register("name")}
+				/>
 				{errors.name ? (
 					<p className="text-sm text-destructive">{errors.name.message}</p>
 				) : null}
@@ -174,7 +178,7 @@ export default function RoomForm({
 					value={watch("type")}
 					onValueChange={(value: RoomType) => setValue("type", value)}
 				>
-					<SelectTrigger>
+					<SelectTrigger className="bg-white/5 border-white/10">
 						<SelectValue placeholder="Room type" />
 					</SelectTrigger>
 					<SelectContent>
@@ -189,7 +193,11 @@ export default function RoomForm({
 
 			<div className="space-y-2">
 				<Label>Description</Label>
-				<Textarea placeholder="Description" {...register("description")} />
+				<Textarea
+					className="bg-white/5 border-white/10"
+					placeholder="Description"
+					{...register("description")}
+				/>
 			</div>
 
 			{/* HOTEL */}
@@ -200,7 +208,7 @@ export default function RoomForm({
 					onValueChange={(value) => setValue("hotelId", value)}
 					disabled={hotelsLoading}
 				>
-					<SelectTrigger>
+					<SelectTrigger className="bg-white/5 border-white/10">
 						<SelectValue
 							placeholder={hotelsLoading ? "Loading…" : "Select hotel"}
 						/>
@@ -221,7 +229,11 @@ export default function RoomForm({
 			<div className="grid grid-cols-2 gap-4">
 				<div className="space-y-2">
 					<Label>Total rooms</Label>
-					<Input type="number" {...register("totalRooms")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						type="number"
+						{...register("totalRooms")}
+					/>
 					{errors.totalRooms ? (
 						<p className="text-sm text-destructive">
 							{errors.totalRooms.message}
@@ -230,7 +242,11 @@ export default function RoomForm({
 				</div>
 				<div className="space-y-2">
 					<Label>Capacity</Label>
-					<Input type="number" {...register("capacity")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						type="number"
+						{...register("capacity")}
+					/>
 					{errors.capacity ? (
 						<p className="text-sm text-destructive">
 							{errors.capacity.message}
@@ -242,7 +258,11 @@ export default function RoomForm({
 			<div className="grid grid-cols-2 gap-4">
 				<div className="space-y-2">
 					<Label>Price per night</Label>
-					<Input type="number" {...register("pricePerNight")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						type="number"
+						{...register("pricePerNight")}
+					/>
 					{errors.pricePerNight ? (
 						<p className="text-sm text-destructive">
 							{errors.pricePerNight.message}
@@ -251,28 +271,45 @@ export default function RoomForm({
 				</div>
 				<div className="space-y-2">
 					<Label>Size</Label>
-					<Input placeholder="e.g. 40 m²" {...register("size")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						placeholder="e.g. 40 m²"
+						{...register("size")}
+					/>
 				</div>
 			</div>
 
 			<div className="space-y-2">
 				<Label>Amenities (comma separated)</Label>
-				<Input placeholder="WiFi, TV, Mini bar" {...register("amenities")} />
+				<Input
+					className="bg-white/5 border-white/10"
+					placeholder="WiFi, TV, Mini bar"
+					{...register("amenities")}
+				/>
 			</div>
 
 			<div className="space-y-2">
 				<Label>Hero image URL</Label>
-				<Input placeholder="https://…" {...register("heroImage")} />
+				<Input
+					className="bg-white/5 border-white/10"
+					placeholder="https://…"
+					{...register("heroImage")}
+				/>
 			</div>
 
 			<div className="space-y-2">
 				<Label>Listing image URL</Label>
-				<Input placeholder="https://…" {...register("listingImage")} />
+				<Input
+					className="bg-white/5 border-white/10"
+					placeholder="https://…"
+					{...register("listingImage")}
+				/>
 			</div>
 
 			<div className="space-y-2">
 				<Label>Gallery images (one per line)</Label>
 				<Textarea
+					className="bg-white/5 border-white/10"
 					placeholder="https://…\nhttps://…"
 					{...register("galleryImages")}
 				/>

@@ -8,6 +8,7 @@ import PageContainer from "@/components/admin/PageContainer";
 import PageHeader from "@/components/admin/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Table,
 	TableBody,
@@ -49,6 +50,8 @@ export default function UsersPage() {
 		load();
 	}, [load]);
 
+	const staffCount = users.filter((user) => user.role === "STAFF").length;
+
 	const updateRole = async (id: string, role: User["role"]) => {
 		try {
 			await api.put(`/users/${id}/role`, { role });
@@ -77,6 +80,35 @@ export default function UsersPage() {
 				description="Manage customer and staff accounts"
 			/>
 
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Total Users
+						</p>
+						<p className="text-3xl font-display mt-2">{users.length}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Staff Members
+						</p>
+						<p className="text-3xl font-display mt-2">{staffCount}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Admins
+						</p>
+						<p className="text-3xl font-display mt-2">
+							{users.filter((user) => user.role === "ADMIN").length}
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
 			<div className="mt-4">
 				{error ? (
 					<EmptyState
@@ -89,46 +121,48 @@ export default function UsersPage() {
 				) : users.length === 0 ? (
 					<EmptyState title="No users" description="No users found." />
 				) : (
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Name</TableHead>
-								<TableHead>Email</TableHead>
-								<TableHead>Role</TableHead>
-								<TableHead className="text-right">Actions</TableHead>
-							</TableRow>
-						</TableHeader>
+					<div className="luxury-panel rounded-2xl overflow-hidden">
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Name</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Role</TableHead>
+									<TableHead className="text-right">Actions</TableHead>
+								</TableRow>
+							</TableHeader>
 
-						<TableBody>
-							{users.map((user) => (
-								<TableRow key={user._id}>
-									<TableCell>{user.name}</TableCell>
-									<TableCell>{user.email}</TableCell>
-									<TableCell>
-										<Badge variant="outline">{user.role}</Badge>
-									</TableCell>
-									<TableCell className="text-right space-x-2">
-										{user.role !== "ADMIN" && (
+							<TableBody>
+								{users.map((user) => (
+									<TableRow key={user._id}>
+										<TableCell>{user.name}</TableCell>
+										<TableCell>{user.email}</TableCell>
+										<TableCell>
+											<Badge variant="outline">{user.role}</Badge>
+										</TableCell>
+										<TableCell className="text-right space-x-2">
+											{user.role !== "ADMIN" && (
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => updateRole(user._id, "STAFF")}
+												>
+													Make Staff
+												</Button>
+											)}
 											<Button
 												size="sm"
-												variant="outline"
-												onClick={() => updateRole(user._id, "STAFF")}
+												variant="destructive"
+												onClick={() => deleteUser(user._id)}
 											>
-												Make Staff
+												Delete
 											</Button>
-										)}
-										<Button
-											size="sm"
-											variant="destructive"
-											onClick={() => deleteUser(user._id)}
-										>
-											Delete
-										</Button>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
 				)}
 			</div>
 		</PageContainer>

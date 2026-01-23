@@ -31,12 +31,12 @@ export default function Topbar({
 	};
 
 	return (
-		<header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-			<div className="h-14 px-4 flex items-center gap-3">
+		<header className="sticky top-0 z-30 border-b border-white/10 luxury-glass">
+			<div className="h-16 px-6 flex items-center gap-3">
 				<Button
 					variant="ghost"
 					size="icon"
-					className="md:hidden"
+					className="md:hidden text-foreground"
 					onClick={onOpenMobileNav}
 					aria-label="Open navigation"
 				>
@@ -46,17 +46,22 @@ export default function Topbar({
 				<div className="ml-auto flex items-center gap-2">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-9 px-2">
-								<div className="relative h-7 w-7 overflow-hidden rounded-full bg-muted">
+							<Button
+								variant="ghost"
+								className="h-10 px-3 rounded-full bg-white/5 border border-white/10"
+							>
+								<div className="relative h-7 w-7 overflow-hidden rounded-full bg-white/10">
 									<Image
 										src="/nova-white.png"
 										alt="Nova"
 										width={28}
 										height={28}
-										className="object-contain p-1 invert"
+										className="object-contain p-1"
 									/>
 								</div>
-								<span className="ml-2 hidden sm:inline text-sm">Admin</span>
+								<span className="ml-2 hidden sm:inline text-sm font-medium">
+									Admin Suite
+								</span>
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-48">

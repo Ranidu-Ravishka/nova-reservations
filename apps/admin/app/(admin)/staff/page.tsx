@@ -9,6 +9,7 @@ import EmptyState, { RetryButton } from "@/components/admin/EmptyState";
 import PageContainer from "@/components/admin/PageContainer";
 import PageHeader from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -183,6 +184,8 @@ export default function StaffManagementPage() {
 		};
 	}, [hotels]);
 
+	const assignedCount = staff.filter((s) => !!s.hotelId).length;
+
 	return (
 		<PageContainer>
 			<PageHeader
@@ -204,6 +207,35 @@ export default function StaffManagementPage() {
 					</div>
 				}
 			/>
+
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Total Staff
+						</p>
+						<p className="text-3xl font-display mt-2">{staff.length}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Assigned Hotels
+						</p>
+						<p className="text-3xl font-display mt-2">{assignedCount}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Unassigned
+						</p>
+						<p className="text-3xl font-display mt-2">
+							{staff.length - assignedCount}
+						</p>
+					</CardContent>
+				</Card>
+			</div>
 
 			{error ? (
 				<EmptyState
@@ -231,9 +263,9 @@ export default function StaffManagementPage() {
 			) : null}
 
 			{!error && (loading || staff.length > 0) ? (
-				<div className="rounded-lg border bg-card">
+				<div className="luxury-panel rounded-2xl overflow-hidden">
 					{loading ? (
-						<div className="p-4 text-muted-foreground">Loading staff…</div>
+						<div className="p-6 text-muted-foreground">Loading staff…</div>
 					) : (
 						<Table>
 							<TableHeader>
@@ -292,7 +324,7 @@ export default function StaffManagementPage() {
 					}
 				}}
 			>
-				<DialogContent className="max-w-md">
+				<DialogContent className="max-w-md luxury-panel border-white/10">
 					<DialogHeader>
 						<DialogTitle>
 							{selected?._id ? "Edit Staff" : "Add Staff"}
@@ -342,7 +374,7 @@ export default function StaffManagementPage() {
 									setValue("role", value, { shouldValidate: true })
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-white/5 border-white/10">
 									<SelectValue placeholder="Select role" />
 								</SelectTrigger>
 								<SelectContent>
@@ -366,7 +398,7 @@ export default function StaffManagementPage() {
 									setValue("hotelId", value, { shouldValidate: true })
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-white/5 border-white/10">
 									<SelectValue placeholder="Select hotel" />
 								</SelectTrigger>
 								<SelectContent>

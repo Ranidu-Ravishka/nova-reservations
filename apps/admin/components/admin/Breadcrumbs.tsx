@@ -22,8 +22,11 @@ export default function Breadcrumbs() {
 	if (parts.length === 0) return null;
 
 	return (
-		<nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-			<ol className="flex items-center gap-2">
+		<nav
+			aria-label="Breadcrumb"
+			className="text-xs uppercase tracking-[0.24em] text-muted-foreground"
+		>
+			<ol className="flex items-center gap-3">
 				<li>
 					<Link href="/dashboard" className="hover:text-foreground">
 						Home
@@ -35,7 +38,7 @@ export default function Breadcrumbs() {
 					const isLast = index === parts.length - 1;
 
 					return (
-						<li key={href} className="flex items-center gap-2">
+						<li key={href} className="flex items-center gap-3">
 							<span className="text-muted-foreground/60">/</span>
 							{isLast ? (
 								<span className="text-foreground font-medium">{label}</span>

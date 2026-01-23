@@ -172,9 +172,9 @@ export default function AmenitiesManagementPage() {
 			) : null}
 
 			{!error && (loading || amenities.length > 0) ? (
-				<div className="rounded-lg border bg-card">
+				<div className="luxury-panel rounded-2xl overflow-hidden">
 					{loading ? (
-						<div className="p-4 text-muted-foreground">Loading amenities…</div>
+						<div className="p-6 text-muted-foreground">Loading amenities…</div>
 					) : (
 						<Table>
 							<TableHeader>
@@ -226,7 +226,7 @@ export default function AmenitiesManagementPage() {
 					if (!o) setSelected(null);
 				}}
 			>
-				<DialogContent className="max-w-md">
+				<DialogContent className="max-w-md luxury-panel border-white/10">
 					<DialogHeader>
 						<DialogTitle>
 							{selected?._id ? "Edit Amenity" : "Add Amenity"}

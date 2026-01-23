@@ -76,29 +76,29 @@ export default function Dashboard() {
 					title: "Total Hotels",
 					value: stats.totalHotels,
 					icon: <Building2 className="h-5 w-5" />,
-					color: "text-blue-600",
-					bgColor: "bg-blue-50",
+					color: "text-amber-200",
+					bgColor: "bg-white/5",
 				},
 				{
 					title: "Available Rooms",
 					value: stats.availableRooms,
 					icon: <Bed className="h-5 w-5" />,
-					color: "text-emerald-600",
-					bgColor: "bg-emerald-50",
+					color: "text-emerald-300",
+					bgColor: "bg-white/5",
 				},
 				{
 					title: "Active Reservations",
 					value: stats.activeReservations,
 					icon: <CalendarDays className="h-5 w-5" />,
-					color: "text-violet-600",
-					bgColor: "bg-violet-50",
+					color: "text-sky-300",
+					bgColor: "bg-white/5",
 				},
 				{
 					title: "Monthly Revenue",
 					value: `$${stats.monthlyRevenue}`,
 					icon: <DollarSign className="h-5 w-5" />,
-					color: "text-amber-600",
-					bgColor: "bg-amber-50",
+					color: "text-amber-300",
+					bgColor: "bg-white/5",
 				},
 			]
 		: [];
@@ -122,10 +122,15 @@ export default function Dashboard() {
 				description="Overview of your hotel management system"
 				actions={
 					<div className="flex items-center gap-2">
-						<Badge variant="outline" className="bg-background">
+						<Badge
+							variant="outline"
+							className="border-primary/30 bg-primary/10 text-primary"
+						>
 							Last 30 days
 						</Badge>
-						<Badge className="bg-primary">Real-time</Badge>
+						<Badge className="bg-primary text-primary-foreground">
+							Real-time
+						</Badge>
 					</div>
 				}
 			/>
@@ -142,7 +147,7 @@ export default function Dashboard() {
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
 				{loading
 					? ["a", "b", "c", "d"].map((k) => (
-							<Card key={k} className="border-0 shadow-sm">
+							<Card key={k} className="luxury-card border-0">
 								<CardContent className="p-6 space-y-4">
 									<Skeleton className="h-12 w-12 rounded-lg" />
 									<div className="space-y-2">
@@ -155,20 +160,20 @@ export default function Dashboard() {
 					: statCards.map((stat) => (
 							<Card
 								key={stat.title}
-								className="border-0 shadow-sm hover:shadow-md transition-all duration-200"
+								className="luxury-card border-0 transition-all duration-200 hover:-translate-y-1"
 							>
 								<CardContent className="p-6">
 									<div className="flex justify-between items-start mb-4">
-										<div className={`p-3 rounded-lg ${stat.bgColor}`}>
+										<div className={`p-3 rounded-xl ${stat.bgColor}`}>
 											<div className={stat.color}>{stat.icon}</div>
 										</div>
 									</div>
 
 									<div className="space-y-2">
-										<p className="text-sm font-medium text-muted-foreground">
+										<p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
 											{stat.title}
 										</p>
-										<p className="text-2xl md:text-3xl font-bold">
+										<p className="text-3xl md:text-4xl font-display font-semibold">
 											{stat.value}
 										</p>
 									</div>
@@ -179,7 +184,7 @@ export default function Dashboard() {
 
 			{/* Extra Panels */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<Card className="lg:col-span-2">
+				<Card className="lg:col-span-2 luxury-card">
 					<CardHeader>
 						<CardTitle className="text-lg">Performance Metrics</CardTitle>
 					</CardHeader>
@@ -200,7 +205,7 @@ export default function Dashboard() {
 					</CardContent>
 				</Card>
 
-				<Card>
+				<Card className="luxury-card">
 					<CardHeader>
 						<CardTitle className="text-lg">Quick Actions</CardTitle>
 					</CardHeader>
@@ -240,11 +245,11 @@ export default function Dashboard() {
 
 function Metric({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="flex items-center justify-between py-3 border-b last:border-b-0">
-			<span className="text-gray-600">{label}</span>
+		<div className="flex items-center justify-between py-3 border-b border-white/10 last:border-b-0">
+			<span className="text-sm text-muted-foreground">{label}</span>
 			<div className="flex items-center gap-2">
-				<span className="font-semibold">{value}</span>
-				<TrendingUp className="h-4 w-4 text-emerald-600" />
+				<span className="font-display text-lg">{value}</span>
+				<TrendingUp className="h-4 w-4 text-primary" />
 			</div>
 		</div>
 	);
@@ -254,10 +259,10 @@ function QuickAction({ title, subtitle }: { title: string; subtitle: string }) {
 	return (
 		<button
 			type="button"
-			className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors"
+			className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
 		>
-			<div className="font-medium text-gray-900">{title}</div>
-			<div className="text-sm text-gray-600">{subtitle}</div>
+			<div className="font-medium text-foreground">{title}</div>
+			<div className="text-sm text-muted-foreground">{subtitle}</div>
 		</button>
 	);
 }

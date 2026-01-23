@@ -143,10 +143,10 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 	/* ---------------- UI ---------------- */
 
 	return (
-		<form onSubmit={handleSubmit(submit)} className="space-y-4">
+		<form onSubmit={handleSubmit(submit)} className="space-y-5">
 			<div>
 				<Label>Hotel Name *</Label>
-				<Input {...register("name")} />
+				<Input className="bg-white/5 border-white/10" {...register("name")} />
 				{errors.name ? (
 					<p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
 				) : null}
@@ -158,7 +158,7 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 					value={watch("location")}
 					onValueChange={(value) => setValue("location", value)}
 				>
-					<SelectTrigger>
+					<SelectTrigger className="bg-white/5 border-white/10">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -179,7 +179,12 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<Label>Latitude *</Label>
-					<Input type="number" step="any" {...register("lat")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						type="number"
+						step="any"
+						{...register("lat")}
+					/>
 					{errors.lat ? (
 						<p className="mt-1 text-sm text-destructive">
 							{errors.lat.message}
@@ -189,7 +194,12 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 
 				<div>
 					<Label>Longitude *</Label>
-					<Input type="number" step="any" {...register("lng")} />
+					<Input
+						className="bg-white/5 border-white/10"
+						type="number"
+						step="any"
+						{...register("lng")}
+					/>
 					{errors.lng ? (
 						<p className="mt-1 text-sm text-destructive">
 							{errors.lng.message}
@@ -200,12 +210,19 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 
 			<div>
 				<Label>Description</Label>
-				<Textarea {...register("description")} />
+				<Textarea
+					className="bg-white/5 border-white/10"
+					{...register("description")}
+				/>
 			</div>
 
 			<div>
 				<Label>Amenities (comma separated)</Label>
-				<Input placeholder="Pool, Spa, Gym" {...register("amenities")} />
+				<Input
+					className="bg-white/5 border-white/10"
+					placeholder="Pool, Spa, Gym"
+					{...register("amenities")}
+				/>
 			</div>
 
 			<div>
@@ -230,6 +247,7 @@ export default function HotelForm({ onSuccess, editingHotel }: HotelFormProps) {
 				</p>
 
 				<Input
+					className="bg-white/5 border-white/10"
 					placeholder="/hotels/colombo/hero.jpg, /hotels/colombo/card.jpg, /hotels/colombo/gallery-1.jpg"
 					{...register("images")}
 				/>

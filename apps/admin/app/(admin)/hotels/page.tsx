@@ -70,6 +70,8 @@ export default function HotelsPage() {
 			h.location.toLowerCase().includes(search.toLowerCase()),
 	);
 
+	const locationCount = new Set(hotels.map((hotel) => hotel.location)).size;
+
 	const handleDelete = async (id: string) => {
 		if (!confirm("Delete this hotel?")) return;
 		setDeletingId(id);
@@ -98,7 +100,7 @@ export default function HotelsPage() {
 							</Button>
 						</DialogTrigger>
 
-						<DialogContent className="max-w-xl">
+						<DialogContent className="max-w-xl luxury-panel border-white/10">
 							<DialogTitle className="sr-only">Hotel Form</DialogTitle>
 							<DialogDescription className="sr-only">
 								Create or edit a hotel
@@ -117,12 +119,42 @@ export default function HotelsPage() {
 				}
 			/>
 
+			{/* Summary */}
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Total Hotels
+						</p>
+						<p className="text-3xl font-display mt-2">{hotels.length}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Destinations
+						</p>
+						<p className="text-3xl font-display mt-2">{locationCount}</p>
+					</CardContent>
+				</Card>
+				<Card className="luxury-card">
+					<CardContent className="p-5">
+						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+							Search Results
+						</p>
+						<p className="text-3xl font-display mt-2">
+							{filteredHotels.length}
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
 			{/* Search */}
-			<div className="mt-6 max-w-sm relative">
+			<div className="max-w-md relative">
 				<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 				<Input
 					placeholder="Search hotels..."
-					className="pl-9"
+					className="pl-9 bg-white/5 border-white/10"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
@@ -136,7 +168,7 @@ export default function HotelsPage() {
 						action={<RetryButton onClick={loadHotels} />}
 					/>
 				) : loading ? (
-					<Card>
+					<Card className="luxury-card">
 						<CardHeader>
 							<CardTitle>Loading…</CardTitle>
 						</CardHeader>
@@ -163,12 +195,12 @@ export default function HotelsPage() {
 						}
 					/>
 				) : (
-					<Card>
+					<Card className="luxury-panel overflow-hidden">
 						<CardHeader>
 							<CardTitle>{filteredHotels.length} Hotels</CardTitle>
 						</CardHeader>
 
-						<CardContent>
+						<CardContent className="p-0">
 							<Table>
 								<TableHeader>
 									<TableRow>
