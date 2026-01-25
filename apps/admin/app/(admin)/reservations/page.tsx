@@ -52,6 +52,13 @@ interface Reservation {
 	roomsBooked?: number;
 }
 
+const formatDate = (value?: string) => {
+	if (!value) return "—";
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) return "—";
+	return parsed.toLocaleDateString();
+};
+
 /* ---------------- COMPONENT ---------------- */
 
 export default function ReservationsPage() {
@@ -243,8 +250,7 @@ export default function ReservationsPage() {
 										<TableCell>{r.hotelName || "—"}</TableCell>
 										<TableCell>{r.roomName || "—"}</TableCell>
 										<TableCell>
-											{new Date(r.checkIn).toLocaleDateString()} →{" "}
-											{new Date(r.checkOut).toLocaleDateString()}
+											{formatDate(r.checkIn)} → {formatDate(r.checkOut)}
 										</TableCell>
 										<TableCell>
 											<Badge

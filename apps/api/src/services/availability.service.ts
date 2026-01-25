@@ -1,5 +1,9 @@
+import { Types } from "mongoose";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
+
+const toObjectId = (value: string) =>
+	Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : null;
 
 /**
  * Count total rooms booked overlapping with given dates
@@ -9,10 +13,16 @@ export const countOverlappingReservations = async (
 	checkIn: Date,
 	checkOut: Date,
 ): Promise<number> => {
+	const roomObjectId = toObjectId(roomId);
+	if (!roomObjectId) return 0;
+	if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
+		return 0;
+	}
+
 	const result = await Reservation.aggregate([
 		{
 			$match: {
-				roomId,
+				roomId: roomObjectId,
 				checkIn: { $lt: checkOut },
 				checkOut: { $gt: checkIn },
 				status: { $ne: "CANCELLED" },

@@ -40,6 +40,22 @@ export const createReservation = async (
 			return res.status(404).json({ message: "Room not found" });
 		}
 
+		const requestedRooms = Number(roomsBooked);
+		if (!Number.isInteger(requestedRooms) || requestedRooms < 1) {
+			return res
+				.status(400)
+				.json({ message: "roomsBooked must be a positive integer" });
+		}
+
+		const checkInDate = new Date(checkIn);
+		const checkOutDate = new Date(checkOut);
+		if (
+			Number.isNaN(checkInDate.getTime()) ||
+			Number.isNaN(checkOutDate.getTime())
+		) {
+			return res.status(400).json({ message: "Invalid dates" });
+		}
+
 		/* 2️⃣ Load hotel */
 		const hotel = await Hotel.findById(room.hotelId);
 		if (!hotel) {
@@ -49,13 +65,13 @@ export const createReservation = async (
 		/* 3️⃣ Availability check */
 		const booked = await countOverlappingReservations(
 			room._id.toString(),
-			new Date(checkIn),
-			new Date(checkOut),
+			checkInDate,
+			checkOutDate,
 		);
 
 		const available = room.totalRooms - booked;
 
-		if (available < roomsBooked) {
+		if (available < requestedRooms) {
 			return res.status(409).json({
 				message: "Not enough rooms available",
 			});
@@ -63,14 +79,13 @@ export const createReservation = async (
 
 		/* 4️⃣ Price calculation */
 		const nights =
-			(new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
-			(1000 * 60 * 60 * 24);
+			(checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
 
 		if (nights <= 0) {
 			return res.status(400).json({ message: "Invalid dates" });
 		}
 
-		const totalPrice = nights * room.pricePerNight * roomsBooked;
+		const totalPrice = nights * room.pricePerNight * requestedRooms;
 
 		/* 5️⃣ Create reservation */
 		const reservation = await Reservation.create({
@@ -83,9 +98,9 @@ export const createReservation = async (
 			roomName: room.name,
 			roomType: room.type,
 
-			roomsBooked,
-			checkIn,
-			checkOut,
+			roomsBooked: requestedRooms,
+			checkIn: checkInDate,
+			checkOut: checkOutDate,
 			nights,
 
 			pricePerNight: room.pricePerNight,
