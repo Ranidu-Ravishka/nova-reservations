@@ -6,19 +6,24 @@ function requireEnv(name: string): string {
 	return value;
 }
 
-const PAYPAL_BASE = requireEnv("PAYPAL_BASE_URL");
-const CLIENT_ID = requireEnv("PAYPAL_CLIENT_ID");
-const CLIENT_SECRET = requireEnv("PAYPAL_CLIENT_SECRET");
+function getPayPalConfig() {
+	return {
+		baseUrl: requireEnv("PAYPAL_BASE_URL"),
+		clientId: requireEnv("PAYPAL_CLIENT_ID"),
+		clientSecret: requireEnv("PAYPAL_CLIENT_SECRET"),
+	};
+}
 
 /* ---------- ACCESS TOKEN ---------- */
 async function getAccessToken() {
+	const { baseUrl, clientId, clientSecret } = getPayPalConfig();
 	const res = await axios.post(
-		`${PAYPAL_BASE}/v1/oauth2/token`,
+		`${baseUrl}/v1/oauth2/token`,
 		"grant_type=client_credentials",
 		{
 			auth: {
-				username: CLIENT_ID,
-				password: CLIENT_SECRET,
+				username: clientId,
+				password: clientSecret,
 			},
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded",
@@ -32,9 +37,10 @@ async function getAccessToken() {
 /* ---------- CREATE ORDER ---------- */
 export async function createPayPalOrder(amount: number) {
 	const token = await getAccessToken();
+	const { baseUrl } = getPayPalConfig();
 
 	const res = await axios.post(
-		`${PAYPAL_BASE}/v2/checkout/orders`,
+		`${baseUrl}/v2/checkout/orders`,
 		{
 			intent: "CAPTURE",
 			purchase_units: [
@@ -60,9 +66,10 @@ export async function createPayPalOrder(amount: number) {
 /* ---------- CAPTURE ORDER ---------- */
 export async function capturePayPalOrder(orderId: string) {
 	const token = await getAccessToken();
+	const { baseUrl } = getPayPalConfig();
 
 	const res = await axios.post(
-		`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`,
+		`${baseUrl}/v2/checkout/orders/${orderId}/capture`,
 		{},
 		{
 			headers: {

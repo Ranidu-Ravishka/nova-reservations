@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { checkRoomAvailability, createReservation } from "@/lib/api";
+import { api, checkRoomAvailability, createReservation } from "@/lib/api";
 import { type AvailabilityUpdatePayload, socket } from "@/lib/socket";
 import type { Room } from "@/types/room";
 
@@ -50,6 +50,20 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 			return;
 		}
 
+		const checkInDate = new Date(checkIn);
+		const checkOutDate = new Date(checkOut);
+		if (
+			Number.isNaN(checkInDate.getTime()) ||
+			Number.isNaN(checkOutDate.getTime())
+		) {
+			setError("Please provide valid dates");
+			return;
+		}
+		if (checkOutDate <= checkInDate) {
+			setError("Check-out must be after check-in");
+			return;
+		}
+
 		setError(null);
 		setLoading(true);
 
@@ -67,7 +81,7 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 			}
 
 			const nights =
-				(new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
+				(checkOutDate.getTime() - checkInDate.getTime()) /
 				(1000 * 60 * 60 * 24);
 
 			setSummary({
@@ -104,28 +118,16 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 			});
 
 			// 2️⃣ Create PayPal payment
-			const res = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/payments`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${localStorage.getItem("token")}`,
-					},
-					body: JSON.stringify({
-						reservationId: reservation._id,
-					}),
-				},
-			);
+			const res = await api.post("/payments", {
+				reservationId: reservation._id,
+			});
 
-			const data = await res.json();
-
-			if (!data.approvalUrl) {
+			if (!res.data?.approvalUrl) {
 				throw new Error("PayPal approval URL missing");
 			}
 
 			// 3️⃣ Redirect to PayPal
-			window.location.href = data.approvalUrl;
+			window.location.href = res.data.approvalUrl;
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : "Payment initiation failed",

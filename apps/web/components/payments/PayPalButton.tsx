@@ -1,6 +1,7 @@
 "use client";
 
 import { PayPalButtons } from "@paypal/react-paypal-js";
+import { useRef } from "react";
 import { api, createReservation } from "@/lib/api";
 
 export function PayPalButton({
@@ -18,19 +19,28 @@ export function PayPalButton({
 	};
 	onSuccess: () => void;
 }) {
+	const reservationIdRef = useRef<string | null>(null);
+
 	return (
 		<PayPalButtons
 			createOrder={async () => {
-				const res = await api.post("/payments/create", { totalPrice });
-				return res.data.id;
+				void totalPrice;
+				const reservation = await createReservation(reservationPayload);
+				reservationIdRef.current = reservation._id as string;
+				const res = await api.post("/payments/create-order", {
+					reservationId: reservation._id,
+				});
+				return res.data.id as string;
 			}}
 			onApprove={async (data) => {
-				await api.post("/payments/capture", {
+				const reservationId = reservationIdRef.current;
+				if (!reservationId) {
+					throw new Error("Reservation not found for payment capture");
+				}
+				await api.post("/payments/capture-order", {
 					orderId: data.orderID,
+					reservationId,
 				});
-
-				// ✅ Now TS is happy
-				await createReservation(reservationPayload);
 
 				onSuccess();
 			}}
