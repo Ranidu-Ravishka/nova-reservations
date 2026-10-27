@@ -121,7 +121,10 @@ Create an `.env` file in `apps/api`:
 MONGO_URI="your-mongodb-connection-string"
 JWT_SECRET="your-secure-jwt-secret"
 PORT=4000
+FRONTEND_URL="http://localhost:3000"
 ```
+
+`FRONTEND_URL` adds the customer frontend origin to the API's CORS allowlist.
 
 Optionally, set frontend API URL in `apps/web/.env.local` and `apps/admin/.env.local` (recommended for deployment):
 
@@ -189,6 +192,12 @@ pnpm lint       # lint with Biome
 pnpm typecheck
 ```
 
+- API regression tests:
+
+```bash
+pnpm --filter api test
+```
+
 - App-level ESLint (optional, inside Next.js apps):
 
 ```bash
@@ -217,6 +226,9 @@ Available route groups (REST):
 - `/availability`
 
 Authentication uses JWT (`Authorization: Bearer <token>`); admin-only routes enforce role checks via RBAC middleware.
+
+The API starts listening only after MongoDB connects, and `/api/health` reports unhealthy
+while the database is disconnected.
 
 ## Team
 

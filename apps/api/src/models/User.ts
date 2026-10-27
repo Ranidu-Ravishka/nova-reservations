@@ -40,7 +40,7 @@ const userSchema = new Schema<UserBase, UserModelType, UserMethods>(
 		password: {
 			type: String,
 			required: true,
-			select: true,
+			select: false,
 		},
 
 		role: {

@@ -14,22 +14,29 @@ initSocket(server);
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
 	console.error("❌ Missing MONGO_URI");
-	process.exit(1);
+	throw new Error("Missing MONGO_URI");
+}
+if (!process.env.JWT_SECRET) {
+	console.error("❌ Missing JWT_SECRET");
+	throw new Error("Missing JWT_SECRET");
 }
 
-mongoose
-	.connect(MONGO_URI)
-	.then(() => console.log("✅ MongoDB connected"))
-	.catch((err) => {
-		console.error("❌ MongoDB connection failed:", err);
-		process.exit(1);
-	});
-
-/* ---------- START SERVER ---------- */
 const PORT = Number(process.env.PORT) || 4000;
-server.listen(PORT, () => {
-	console.log(`🚀 API running on http://localhost:${PORT}`);
-});
+
+async function startServer(mongoUri: string) {
+	try {
+		await mongoose.connect(mongoUri);
+		console.log("✅ MongoDB connected");
+		server.listen(PORT, () => {
+			console.log(`🚀 API running on http://localhost:${PORT}`);
+		});
+	} catch (error) {
+		console.error("❌ MongoDB connection failed:", error);
+		process.exit(1);
+	}
+}
+
+void startServer(MONGO_URI);
 
 /* ---------- GRACEFUL SHUTDOWN ---------- */
 let isShuttingDown = false;
