@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 
 import adminRoutes from "./routes/admin.routes";
 import amenityRoutes from "./routes/amenity.routes";
@@ -24,7 +25,8 @@ const ALLOWED_ORIGINS = [
 	"http://127.0.0.1:3000",
 	"http://localhost:3001", // admin
 	"http://127.0.0.1:3001", // admin
-];
+	process.env.FRONTEND_URL,
+].filter((origin): origin is string => Boolean(origin));
 
 app.use(
 	cors({
@@ -60,7 +62,11 @@ app.get("/", (_, res) => {
 });
 
 app.get("/api/health", (_, res) => {
-	res.json({ status: "ok" });
+	const databaseReady = mongoose.connection.readyState === 1;
+	res.status(databaseReady ? 200 : 503).json({
+		status: databaseReady ? "ok" : "unhealthy",
+		database: databaseReady ? "connected" : "disconnected",
+	});
 });
 
 /* ---------------- TEST ROUTES ---------------- */
