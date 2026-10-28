@@ -1,8 +1,8 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { api, checkRoomAvailability, createReservation } from "@/lib/api";

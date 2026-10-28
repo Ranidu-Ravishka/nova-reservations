@@ -23,6 +23,22 @@
 		"dev": {
 			"cache": false,
 			"persistent": true
+		},
+		"api#dev": {
+			"env": [
+				"MONGO_URI",
+				"JWT_SECRET",
+				"PORT",
+				"FRONTEND_URL",
+				"PAYPAL_MODE",
+				"PAYPAL_CLIENT_ID",
+				"PAYPAL_CLIENT_SECRET",
+				"PAYPAL_BASE_URL",
+				"WEB_BASE_URL",
+				"SOCKET_CORS_ORIGINS",
+				"CLIENT_ORIGIN",
+				"NEXT_PUBLIC_APP_URL"
+			]
 		}
 	}
 }
