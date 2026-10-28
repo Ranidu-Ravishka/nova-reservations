@@ -18,6 +18,7 @@ export default function BookingPage() {
 	const router = useRouter();
 	const [reservation, setReservation] = useState<Reservation | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!params?.id) return;
@@ -34,10 +35,20 @@ export default function BookingPage() {
 			},
 		})
 			.then(async (res) => {
-				if (!res.ok) return null;
+				if (!res.ok) {
+					setError(
+						res.status === 404
+							? "Reservation not found."
+							: "Failed to load reservation.",
+					);
+					return null;
+				}
 				return res.json();
 			})
 			.then((data) => setReservation(data))
+			.catch(() => {
+				setError("Could not reach the server. Please try again.");
+			})
 			.finally(() => setLoading(false));
 	}, [params, router]);
 
@@ -52,7 +63,7 @@ export default function BookingPage() {
 	if (!reservation) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
-				Reservation not found.
+				{error || "Reservation not found."}
 			</div>
 		);
 	}

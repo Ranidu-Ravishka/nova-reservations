@@ -14,9 +14,15 @@ export const countOverlappingReservations = async (
 	checkOut: Date,
 ): Promise<number> => {
 	const roomObjectId = toObjectId(roomId);
-	if (!roomObjectId) return 0;
-	if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
-		return 0;
+	if (!roomObjectId) {
+		throw new TypeError("Invalid room identifier for availability query");
+	}
+	if (
+		Number.isNaN(checkIn.getTime()) ||
+		Number.isNaN(checkOut.getTime()) ||
+		checkOut <= checkIn
+	) {
+		throw new RangeError("Invalid date range for availability query");
 	}
 
 	const result = await Reservation.aggregate([
@@ -47,6 +53,15 @@ export const isRoomAvailable = async (
 	checkIn: Date,
 	checkOut: Date,
 ): Promise<boolean> => {
+	if (
+		!Types.ObjectId.isValid(roomId) ||
+		Number.isNaN(checkIn.getTime()) ||
+		Number.isNaN(checkOut.getTime()) ||
+		checkOut <= checkIn
+	) {
+		return false;
+	}
+
 	const room = await Room.findById(roomId);
 	if (!room || !room.isActive) return false;
 

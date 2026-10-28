@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 interface Reservation {
 	_id: string;
 	status: "PENDING" | "CONFIRMED" | "CANCELLED";
+	paymentStatus?: "UNPAID" | "PAID" | "REFUNDED";
 	checkIn: string;
 	checkOut: string;
 	totalPrice: number;
@@ -52,9 +53,17 @@ export default function BookingConfirmationPage() {
 	return (
 		<div className="min-h-screen bg-cream pt-24">
 			<div className="mx-auto max-w-xl rounded-2xl bg-white p-8 shadow">
-				<h1 className="text-2xl font-serif">Booking Confirmed</h1>
+				<h1 className="text-2xl font-serif">
+					{reservation?.status === "CONFIRMED" &&
+					reservation.paymentStatus === "PAID"
+						? "Booking Confirmed"
+						: "Reservation Status"}
+				</h1>
 				<p className="mt-2 text-sm text-muted-foreground">
-					Your payment has been processed successfully.
+					{reservation?.status === "CONFIRMED" &&
+					reservation.paymentStatus === "PAID"
+						? "Your payment has been processed successfully."
+						: "Payment is not confirmed. Check the reservation status below."}
 				</p>
 
 				{loading ? (

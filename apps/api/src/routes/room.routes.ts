@@ -3,6 +3,7 @@ import { Roles } from "../constants/roles";
 import {
 	createRoom,
 	deleteRoom,
+	getAdminRooms,
 	getRoomById,
 	getRooms,
 	updateRoom,
@@ -13,6 +14,7 @@ import { authorize } from "../middleware/role.middleware";
 const router = Router();
 
 router.get("/", getRooms);
+router.get("/admin", requireAuth, authorize(Roles.ADMIN), getAdminRooms);
 router.get("/:id", getRoomById);
 router.post("/", requireAuth, authorize(Roles.ADMIN, Roles.STAFF), createRoom);
 router.put(

@@ -16,20 +16,11 @@ export default function AdminShell({
 
 	return (
 		<AdminAuthGate>
-			<div className="min-h-dvh luxury-app text-foreground">
+			<div className="flex min-h-dvh luxury-app text-foreground">
 				<div className="hidden md:flex">
 					<Sidebar />
-					<div className="flex min-w-0 flex-1 flex-col">
-						<Topbar onOpenMobileNav={() => setMobileNavOpen(true)} />
-						<div className="px-6 pt-6">
-							<Breadcrumbs />
-						</div>
-						<main className="min-w-0 flex-1">{children}</main>
-					</div>
 				</div>
-
-				{/* Mobile layout */}
-				<div className="md:hidden">
+				<div className="flex min-w-0 flex-1 flex-col">
 					<Topbar onOpenMobileNav={() => setMobileNavOpen(true)} />
 					<div className="px-6 pt-6">
 						<Breadcrumbs />

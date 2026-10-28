@@ -82,7 +82,12 @@ export default function PaymentsPage() {
 							Pending / Failed
 						</p>
 						<p className="text-3xl font-display mt-2">
-							{payments.filter((p) => p.status !== "PAID").length}
+							{
+								payments.filter(
+									(payment) =>
+										payment.status === "PENDING" || payment.status === "FAILED",
+								).length
+							}
 						</p>
 					</CardContent>
 				</Card>

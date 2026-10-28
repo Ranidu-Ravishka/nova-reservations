@@ -38,7 +38,7 @@ const offers = [
 
 export default function OffersSection() {
 	return (
-		<section className="py-24 bg-background">
+		<section id="offers" className="py-24 bg-background">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
 				{/* Section Header */}
 				<motion.div
@@ -56,7 +56,7 @@ export default function OffersSection() {
 							Exclusive Deals
 						</h2>
 					</div>
-					<Link href="/offers">
+					<Link href="#offers">
 						<Button
 							variant="outline"
 							className="border-charcoal/20 text-charcoal hover:border-gold hover:text-gold rounded-full bg-transparent"
@@ -99,17 +99,9 @@ export default function OffersSection() {
 									<p className="text-charcoal/60 text-sm mb-4 line-clamp-2">
 										{offer.description}
 									</p>
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-2 text-sm text-charcoal/50">
-											<Calendar className="w-4 h-4" />
-											<span>Valid until {offer.validUntil}</span>
-										</div>
-										<Link
-											href={`/offers/${offer.id}`}
-											className="text-gold text-sm font-medium hover:underline"
-										>
-											Learn More
-										</Link>
+									<div className="flex items-center gap-2 text-sm text-charcoal/50">
+										<Calendar className="w-4 h-4" />
+										<span>Valid until {offer.validUntil}</span>
 									</div>
 								</div>
 							</div>

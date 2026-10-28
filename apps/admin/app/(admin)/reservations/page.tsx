@@ -40,6 +40,7 @@ type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 interface Reservation {
 	_id: string;
 	status: ReservationStatus;
+	paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
 	checkIn: string;
 	checkOut: string;
 	totalPrice: number;
@@ -232,6 +233,7 @@ export default function ReservationsPage() {
 									<TableHead>Room</TableHead>
 									<TableHead>Dates</TableHead>
 									<TableHead>Status</TableHead>
+									<TableHead>Payment</TableHead>
 									<TableHead>Total</TableHead>
 									<TableHead className="text-right">Actions</TableHead>
 								</TableRow>
@@ -263,6 +265,19 @@ export default function ReservationsPage() {
 												}
 											>
 												{r.status}
+											</Badge>
+										</TableCell>
+										<TableCell>
+											<Badge
+												variant={
+													r.paymentStatus === "PAID"
+														? "default"
+														: r.paymentStatus === "REFUNDED"
+															? "destructive"
+															: "secondary"
+												}
+											>
+												{r.paymentStatus || "UNPAID"}
 											</Badge>
 										</TableCell>
 										<TableCell>${r.totalPrice}</TableCell>
@@ -304,8 +319,12 @@ export default function ReservationsPage() {
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="PENDING">Pending</SelectItem>
-								<SelectItem value="CONFIRMED">Confirmed</SelectItem>
+								{selected.paymentStatus !== "PAID" ? (
+									<SelectItem value="PENDING">Pending</SelectItem>
+								) : null}
+								{selected.paymentStatus === "PAID" ? (
+									<SelectItem value="CONFIRMED">Confirmed</SelectItem>
+								) : null}
 								<SelectItem value="CANCELLED">Cancelled</SelectItem>
 							</SelectContent>
 						</Select>

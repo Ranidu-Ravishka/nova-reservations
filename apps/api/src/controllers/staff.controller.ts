@@ -10,12 +10,18 @@ export const getStaff = async (_: Request, res: Response) => {
 };
 
 export const updateStaff = async (req: Request, res: Response) => {
-	res.json(
-		await Staff.findByIdAndUpdate(req.params.id, req.body, { new: true }),
-	);
+	const staff = await Staff.findByIdAndUpdate(req.params.id, req.body, {
+		new: true,
+		runValidators: true,
+	});
+	if (!staff)
+		return res.status(404).json({ message: "Staff member not found" });
+	return res.json(staff);
 };
 
 export const deleteStaff = async (req: Request, res: Response) => {
-	await Staff.findByIdAndDelete(req.params.id);
-	res.json({ message: "Staff removed" });
+	const staff = await Staff.findByIdAndDelete(req.params.id);
+	if (!staff)
+		return res.status(404).json({ message: "Staff member not found" });
+	return res.json({ message: "Staff removed" });
 };

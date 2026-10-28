@@ -10,12 +10,16 @@ export const getAmenities = async (_: Request, res: Response) => {
 };
 
 export const deleteAmenity = async (req: Request, res: Response) => {
-	await Amenity.findByIdAndDelete(req.params.id);
-	res.json({ message: "Amenity deleted" });
+	const amenity = await Amenity.findByIdAndDelete(req.params.id);
+	if (!amenity) return res.status(404).json({ message: "Amenity not found" });
+	return res.json({ message: "Amenity deleted" });
 };
 
 export const updateAmenity = async (req: Request, res: Response) => {
-	res.json(
-		await Amenity.findByIdAndUpdate(req.params.id, req.body, { new: true }),
-	);
+	const amenity = await Amenity.findByIdAndUpdate(req.params.id, req.body, {
+		new: true,
+		runValidators: true,
+	});
+	if (!amenity) return res.status(404).json({ message: "Amenity not found" });
+	return res.json(amenity);
 };

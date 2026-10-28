@@ -14,11 +14,18 @@ export const getTransports = async (_: Request, res: Response) => {
 export const updateTransport = async (req: Request, res: Response) => {
 	const service = await Transport.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
+		runValidators: true,
 	});
+	if (!service) {
+		return res.status(404).json({ message: "Transport service not found" });
+	}
 	res.json(service);
 };
 
 export const deleteTransport = async (req: Request, res: Response) => {
-	await Transport.findByIdAndDelete(req.params.id);
+	const service = await Transport.findByIdAndDelete(req.params.id);
+	if (!service) {
+		return res.status(404).json({ message: "Transport service not found" });
+	}
 	res.json({ message: "Transport service deleted" });
 };

@@ -33,12 +33,10 @@ const hotels = [
 ];
 
 const quickLinks = [
-	{ name: "About Us", href: "/about" },
 	{ name: "Rooms & Suites", href: "/rooms" },
 	{ name: "Transport Service", href: "/transport" },
-	{ name: "Special Offers", href: "/offers" },
+	{ name: "Special Offers", href: "/#offers" },
 	{ name: "Contact Us", href: "/contact" },
-	{ name: "Careers", href: "/careers" },
 ];
 
 export function Footer() {
@@ -160,20 +158,6 @@ export function Footer() {
 						© {new Date().getFullYear()} Nova Reservations Group. All rights
 						reserved.
 					</p>
-					<div className="flex gap-6">
-						<Link
-							href="/privacy"
-							className="text-sm text-ivory/40 hover:text-gold transition-colors"
-						>
-							Privacy Policy
-						</Link>
-						<Link
-							href="/terms"
-							className="text-sm text-ivory/40 hover:text-gold transition-colors"
-						>
-							Terms of Service
-						</Link>
-					</div>
 				</div>
 			</div>
 		</footer>

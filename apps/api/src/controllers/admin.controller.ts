@@ -1,48 +1,93 @@
 import type { Request, Response } from "express";
 import { Hotel } from "../models/Hotel";
+import { Payment } from "../models/Payment";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
+import { UserModel } from "../models/User";
 
 export const getDashboardStats = async (_req: Request, res: Response) => {
 	try {
-		const totalHotels = await Hotel.countDocuments();
-
-		const availableRooms = await Room.countDocuments({
-			isAvailable: true,
-		});
-
-		const activeReservations = await Reservation.countDocuments({
-			status: "CONFIRMED",
-		});
+		const startOfToday = new Date();
+		startOfToday.setUTCHours(0, 0, 0, 0);
+		const startOfTomorrow = new Date(startOfToday);
+		startOfTomorrow.setUTCDate(startOfTomorrow.getUTCDate() + 1);
 
 		const startOfMonth = new Date();
-		startOfMonth.setDate(1);
-		startOfMonth.setHours(0, 0, 0, 0);
+		startOfMonth.setUTCDate(1);
+		startOfMonth.setUTCHours(0, 0, 0, 0);
 
-		const revenueAgg = await Reservation.aggregate([
-			{
-				$match: {
-					status: "CONFIRMED",
-					createdAt: { $gte: startOfMonth },
+		const [
+			totalHotels,
+			roomCounts,
+			roomTypes,
+			activeReservations,
+			totalReservations,
+			totalUsers,
+			revenueTotals,
+		] = await Promise.all([
+			Hotel.countDocuments(),
+			Room.aggregate([
+				{ $match: { isActive: true } },
+				{
+					$group: {
+						_id: null,
+						total: { $sum: "$totalRooms" },
+						roomIds: { $addToSet: "$_id" },
+					},
 				},
-			},
-			{
-				$group: {
-					_id: null,
-					total: { $sum: "$totalPrice" },
+			]),
+			Room.countDocuments(),
+			Reservation.countDocuments({
+				status: { $ne: "CANCELLED" },
+				checkOut: { $gt: startOfToday },
+			}),
+			Reservation.countDocuments(),
+			UserModel.countDocuments(),
+			Payment.aggregate([
+				{
+					$match: {
+						status: "PAID",
+						currency: "USD",
+						createdAt: { $gte: startOfMonth },
+					},
 				},
-			},
+				{ $group: { _id: null, total: { $sum: "$amount" } } },
+			]),
 		]);
 
-		const monthlyRevenue = revenueAgg[0]?.total || 0;
+		const activeRoomIds = roomCounts[0]?.roomIds ?? [];
+		const occupiedRooms = activeRoomIds.length
+			? await Reservation.aggregate([
+					{
+						$match: {
+							roomId: { $in: activeRoomIds },
+							status: { $ne: "CANCELLED" },
+							checkIn: { $lt: startOfTomorrow },
+							checkOut: { $gt: startOfToday },
+						},
+					},
+					{ $group: { _id: null, total: { $sum: "$roomsBooked" } } },
+				])
+			: [];
+		const availableRooms = Math.max(
+			0,
+			(roomCounts[0]?.total ?? 0) - (occupiedRooms[0]?.total ?? 0),
+		);
+		const monthlyRevenue = revenueTotals[0]?.total ?? 0;
 
 		res.json({
+			stats: {
+				users: totalUsers,
+				rooms: roomTypes,
+				reservations: totalReservations,
+			},
 			totalHotels,
 			availableRooms,
 			activeReservations,
 			monthlyRevenue,
 		});
-	} catch (_error) {
+	} catch (error) {
+		console.error("Get dashboard stats error:", error);
 		res.status(500).json({ message: "Failed to load dashboard stats" });
 	}
 };

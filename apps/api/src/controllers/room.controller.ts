@@ -23,6 +23,11 @@ export const getRooms: RequestHandler = async (req, res) => {
 	res.json(rooms);
 };
 
+export const getAdminRooms: RequestHandler = async (_req, res) => {
+	const rooms = await Room.find().populate("hotelId");
+	res.json(rooms);
+};
+
 /* GET ONE */
 export const getRoomById: RequestHandler = async (req, res) => {
 	const room = await Room.findById(req.params.id).populate("hotelId");
@@ -34,6 +39,7 @@ export const getRoomById: RequestHandler = async (req, res) => {
 export const updateRoom: RequestHandler = async (req, res) => {
 	const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
+		runValidators: true,
 	});
 
 	if (!room) return res.status(404).json({ message: "Room not found" });
@@ -42,6 +48,11 @@ export const updateRoom: RequestHandler = async (req, res) => {
 
 /* SOFT DELETE */
 export const deleteRoom: RequestHandler = async (req, res) => {
-	await Room.findByIdAndUpdate(req.params.id, { isActive: false });
+	const room = await Room.findByIdAndUpdate(
+		req.params.id,
+		{ isActive: false },
+		{ runValidators: true },
+	);
+	if (!room) return res.status(404).json({ message: "Room not found" });
 	res.json({ message: "Room deactivated" });
 };

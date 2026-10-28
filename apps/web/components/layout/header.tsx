@@ -326,7 +326,7 @@ export function Header() {
 									<Menu className="h-5 w-5" />
 								</Button>
 							</SheetTrigger>
-							<SheetContent side="right" className="p-0">
+							<SheetContent side="right" className="p-0 overflow-y-auto">
 								<div className="p-6">
 									<SheetHeader>
 										<SheetTitle>Menu</SheetTitle>

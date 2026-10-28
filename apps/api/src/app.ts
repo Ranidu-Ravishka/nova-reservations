@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
-
+import { errorHandler } from "./middleware/error.middleware";
 import adminRoutes from "./routes/admin.routes";
 import amenityRoutes from "./routes/amenity.routes";
 import authRoutes from "./routes/auth.routes";
@@ -37,7 +37,7 @@ app.use(
 
 /* ---------------- MIDDLEWARE ---------------- */
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 /* ---------------- ROUTES ---------------- */
 
@@ -74,5 +74,7 @@ app.get("/api/health", (_, res) => {
 app.get("/api/payments-test", (_, res) => {
 	res.send("Payments route works");
 });
+
+app.use(errorHandler);
 
 export default app;

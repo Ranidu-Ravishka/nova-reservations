@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { Types } from "mongoose";
 import paypal from "paypal-rest-sdk";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import { Payment } from "../models/Payment";
@@ -8,13 +9,15 @@ import { countOverlappingReservations } from "../services/availability.service";
 import {
 	capturePayPalOrder,
 	createPayPalOrder,
+	isLegacyPaymentApproved,
+	isPayPalOrderCaptured,
 } from "../services/paypal.service";
 import { getIO } from "../socket";
 
 /* ---------------- PAYPAL CONFIG ---------------- */
 
 paypal.configure({
-	mode: "sandbox",
+	mode: process.env.PAYPAL_MODE || "sandbox",
 	client_id: process.env.PAYPAL_CLIENT_ID as string,
 	client_secret: process.env.PAYPAL_CLIENT_SECRET as string,
 });
@@ -28,6 +31,7 @@ type PayPalLink = {
 
 type PayPalPayment = {
 	id?: string;
+	state?: string;
 	links?: PayPalLink[];
 };
 
@@ -39,9 +43,12 @@ type PayPalOrder = {
 
 export const createPayment = async (req: AuthRequest, res: Response) => {
 	try {
-		const { reservationId } = req.body;
+		const { reservationId } = req.body ?? {};
 
-		if (!reservationId) {
+		if (
+			typeof reservationId !== "string" ||
+			!Types.ObjectId.isValid(reservationId)
+		) {
 			return res.status(400).json({ message: "Reservation ID required" });
 		}
 
@@ -62,7 +69,10 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
 			return res.status(403).json({ message: "Access denied" });
 		}
 
-		if (reservation.status !== "PENDING") {
+		if (
+			reservation.status !== "PENDING" ||
+			reservation.paymentStatus !== "UNPAID"
+		) {
 			return res.status(400).json({ message: "Reservation is not payable" });
 		}
 
@@ -87,33 +97,42 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
 		paypal.payment.create(
 			paymentJson,
 			async (error: unknown, payment: PayPalPayment) => {
-				if (error) {
-					console.error("PayPal create error:", error);
-					return res.status(500).json({ message: "PayPal payment failed" });
+				try {
+					if (error) {
+						console.error("PayPal create error:", error);
+						return res.status(500).json({ message: "PayPal payment failed" });
+					}
+
+					const approval = payment?.links?.find(
+						(link) => link?.rel === "approval_url",
+					);
+
+					if (!approval?.href || !payment?.id) {
+						return res.status(500).json({ message: "Approval URL not found" });
+					}
+
+					reservation.paymentId = payment.id;
+					await reservation.save();
+
+					await Payment.create({
+						reservationId: reservation._id,
+						userId: reservation.userId,
+						paypalPaymentId: payment.id,
+						amount: reservation.totalPrice,
+						currency: "USD",
+						method: "PAYPAL",
+						status: "PENDING",
+					});
+
+					return res.json({ approvalUrl: approval.href });
+				} catch (callbackError) {
+					console.error("PayPal payment initialization error:", callbackError);
+					if (!res.headersSent) {
+						return res
+							.status(500)
+							.json({ message: "PayPal payment initialization failed" });
+					}
 				}
-
-				const approval = payment?.links?.find(
-					(link) => link?.rel === "approval_url",
-				);
-
-				if (!approval?.href || !payment?.id) {
-					return res.status(500).json({ message: "Approval URL not found" });
-				}
-
-				reservation.paymentId = payment.id;
-				await reservation.save();
-
-				await Payment.create({
-					reservationId: reservation._id,
-					userId: reservation.userId,
-					paypalPaymentId: payment.id,
-					amount: reservation.totalPrice,
-					currency: "USD",
-					method: "PAYPAL",
-					status: "PENDING",
-				});
-
-				return res.json({ approvalUrl: approval.href });
 			},
 		);
 	} catch (err) {
@@ -126,9 +145,16 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
 
 export const executePayment = async (req: AuthRequest, res: Response) => {
 	try {
-		const { paymentId, PayerID, reservationId } = req.body;
+		const { paymentId, PayerID, reservationId } = req.body ?? {};
 
-		if (!paymentId || !PayerID || !reservationId) {
+		if (
+			typeof paymentId !== "string" ||
+			!paymentId ||
+			typeof PayerID !== "string" ||
+			!PayerID ||
+			typeof reservationId !== "string" ||
+			!Types.ObjectId.isValid(reservationId)
+		) {
 			return res.status(400).json({ message: "Missing payment data" });
 		}
 
@@ -148,77 +174,116 @@ export const executePayment = async (req: AuthRequest, res: Response) => {
 		) {
 			return res.status(403).json({ message: "Access denied" });
 		}
-		if (reservation.paymentId && reservation.paymentId !== paymentId) {
+		if (!reservation.paymentId || reservation.paymentId !== paymentId) {
 			return res
 				.status(400)
 				.json({ message: "Payment does not match reservation" });
 		}
+		const paymentRecord = await Payment.findOne({
+			reservationId: reservation._id,
+			paypalPaymentId: paymentId,
+			status: "PENDING",
+		});
+		if (!paymentRecord) {
+			return res.status(409).json({ message: "Payment is not pending" });
+		}
 		if (reservation.status !== "PENDING") {
 			return res.status(400).json({ message: "Invalid reservation state" });
 		}
-		if (reservation.paymentStatus === "PAID") {
-			return res.status(409).json({ message: "Reservation already paid" });
+		if (reservation.paymentStatus !== "UNPAID") {
+			return res.status(409).json({ message: "Reservation is not unpaid" });
+		}
+
+		const room = await Room.findById(reservation.roomId);
+		if (!room) {
+			return res.status(404).json({ message: "Room not found" });
+		}
+		const bookedBeforePayment = await countOverlappingReservations(
+			room._id.toString(),
+			reservation.checkIn,
+			reservation.checkOut,
+		);
+		const otherRoomsBooked = Math.max(
+			0,
+			bookedBeforePayment - reservation.roomsBooked,
+		);
+		if (room.totalRooms - otherRoomsBooked < reservation.roomsBooked) {
+			return res.status(409).json({
+				message: "Rooms sold out during payment processing",
+			});
 		}
 
 		paypal.payment.execute(
 			paymentId,
 			{ payer_id: PayerID },
-			async (error: unknown) => {
-				if (error) {
-					console.error("PayPal execute error:", error);
-					await Payment.findOneAndUpdate(
-						{ paypalPaymentId: paymentId },
-						{ status: "FAILED" },
+			async (error: unknown, payment: unknown) => {
+				try {
+					if (error) {
+						console.error("PayPal execute error:", error);
+						await Payment.findOneAndUpdate(
+							{ _id: paymentRecord._id, status: "PENDING" },
+							{ status: "FAILED" },
+						);
+						return res
+							.status(500)
+							.json({ message: "Payment execution failed" });
+					}
+
+					if (!isLegacyPaymentApproved(payment, reservation.totalPrice)) {
+						return res.status(409).json({
+							message: "PayPal payment is not completed for this amount",
+						});
+					}
+
+					const room = await Room.findById(reservation.roomId);
+					if (!room) {
+						return res.status(404).json({ message: "Room not found" });
+					}
+
+					const booked = await countOverlappingReservations(
+						room._id.toString(),
+						reservation.checkIn,
+						reservation.checkOut,
 					);
-					return res.status(500).json({ message: "Payment execution failed" });
-				}
+					const otherBooked = Math.max(0, booked - reservation.roomsBooked);
+					const remaining = room.totalRooms - otherBooked;
+					if (remaining < reservation.roomsBooked) {
+						return res.status(409).json({
+							message: "Rooms sold out during payment processing",
+						});
+					}
 
-				const room = await Room.findById(reservation.roomId);
-				if (!room) {
-					return res.status(404).json({ message: "Room not found" });
-				}
+					reservation.status = "CONFIRMED";
+					reservation.paymentStatus = "PAID";
+					await reservation.save();
 
-				const booked = await countOverlappingReservations(
-					room._id.toString(),
-					reservation.checkIn,
-					reservation.checkOut,
-				);
-
-				const remaining = room.totalRooms - booked;
-				if (remaining < reservation.roomsBooked) {
 					await Payment.findOneAndUpdate(
-						{ paypalPaymentId: paymentId },
-						{ status: "FAILED" },
+						{ _id: paymentRecord._id, status: "PENDING" },
+						{ status: "PAID", payerId: PayerID },
+						{ new: true },
 					);
-					return res.status(409).json({
-						message: "Rooms sold out during payment processing",
+
+					const io = getIO();
+					io.emit("availability:update", {
+						roomId: room._id.toString(),
+						remaining: room.totalRooms - booked,
 					});
+					io.emit("reservation:status", {
+						id: reservation._id.toString(),
+						status: reservation.status,
+					});
+
+					return res.json({
+						message: "Payment successful. Reservation confirmed.",
+					});
+				} catch (callbackError) {
+					console.error("PayPal payment processing error:", callbackError);
+					if (!res.headersSent) {
+						return res
+							.status(500)
+							.json({ message: "Payment processing failed" });
+					}
 				}
-
-				reservation.status = "CONFIRMED";
-				reservation.paymentStatus = "PAID";
-				reservation.paymentId = paymentId;
-				await reservation.save();
-
-				await Payment.findOneAndUpdate(
-					{ paypalPaymentId: paymentId },
-					{ status: "PAID", payerId: PayerID },
-					{ new: true },
-				);
-
-				const io = getIO();
-				io.emit("availability:update", {
-					roomId: room._id.toString(),
-					remaining,
-				});
-				io.emit("reservation:status", {
-					id: reservation._id.toString(),
-					status: reservation.status,
-				});
-
-				return res.json({
-					message: "Payment successful. Reservation confirmed.",
-				});
 			},
 		);
 	} catch (err) {
@@ -231,8 +296,13 @@ export const executePayment = async (req: AuthRequest, res: Response) => {
 
 export const createOrder = async (req: AuthRequest, res: Response) => {
 	try {
-		const { reservationId } = req.body as { reservationId?: string };
-		if (!reservationId) {
+		const { reservationId } = (req.body ?? {}) as {
+			reservationId?: string;
+		};
+		if (
+			typeof reservationId !== "string" ||
+			!Types.ObjectId.isValid(reservationId)
+		) {
 			return res.status(400).json({ message: "Reservation ID required" });
 		}
 
@@ -253,7 +323,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 			return res.status(403).json({ message: "Access denied" });
 		}
 
-		if (reservation.status !== "PENDING") {
+		if (
+			reservation.status !== "PENDING" ||
+			reservation.paymentStatus !== "UNPAID"
+		) {
 			return res.status(400).json({ message: "Reservation is not payable" });
 		}
 
@@ -291,12 +364,17 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
 export const captureOrder = async (req: AuthRequest, res: Response) => {
 	try {
-		const { orderId, reservationId } = req.body as {
+		const { orderId, reservationId } = (req.body ?? {}) as {
 			orderId?: string;
 			reservationId?: string;
 		};
 
-		if (!orderId || !reservationId) {
+		if (
+			typeof orderId !== "string" ||
+			!orderId ||
+			typeof reservationId !== "string" ||
+			!Types.ObjectId.isValid(reservationId)
+		) {
 			return res.status(400).json({ message: "Missing capture data" });
 		}
 
@@ -317,14 +395,25 @@ export const captureOrder = async (req: AuthRequest, res: Response) => {
 			return res.status(403).json({ message: "Access denied" });
 		}
 
-		if (reservation.paymentId && reservation.paymentId !== orderId) {
+		if (!reservation.paymentId || reservation.paymentId !== orderId) {
 			return res
 				.status(400)
 				.json({ message: "Order does not match reservation" });
 		}
+		const paymentRecord = await Payment.findOne({
+			reservationId: reservation._id,
+			paypalPaymentId: orderId,
+			status: "PENDING",
+		});
+		if (!paymentRecord) {
+			return res.status(409).json({ message: "Payment is not pending" });
+		}
 
 		if (reservation.status !== "PENDING") {
 			return res.status(400).json({ message: "Invalid reservation state" });
+		}
+		if (reservation.paymentStatus !== "UNPAID") {
+			return res.status(409).json({ message: "Reservation is not unpaid" });
 		}
 
 		const room = await Room.findById(reservation.roomId);
@@ -338,7 +427,8 @@ export const captureOrder = async (req: AuthRequest, res: Response) => {
 			reservation.checkOut,
 		);
 
-		const remaining = room.totalRooms - booked;
+		const otherBooked = Math.max(0, booked - reservation.roomsBooked);
+		const remaining = room.totalRooms - otherBooked;
 		if (remaining < reservation.roomsBooked) {
 			return res.status(409).json({
 				message: "Rooms sold out during payment processing",
@@ -346,11 +436,16 @@ export const captureOrder = async (req: AuthRequest, res: Response) => {
 		}
 
 		try {
-			await capturePayPalOrder(orderId);
+			const capture = await capturePayPalOrder(orderId);
+			if (!isPayPalOrderCaptured(capture, reservation.totalPrice)) {
+				return res
+					.status(409)
+					.json({ message: "PayPal order is not completed for this amount" });
+			}
 		} catch (error) {
 			console.error("PayPal capture error:", error);
 			await Payment.findOneAndUpdate(
-				{ paypalPaymentId: orderId },
+				{ _id: paymentRecord._id, status: "PENDING" },
 				{ status: "FAILED" },
 			);
 			return res.status(500).json({ message: "Payment capture failed" });
@@ -362,7 +457,7 @@ export const captureOrder = async (req: AuthRequest, res: Response) => {
 		await reservation.save();
 
 		await Payment.findOneAndUpdate(
-			{ paypalPaymentId: orderId },
+			{ _id: paymentRecord._id, status: "PENDING" },
 			{ status: "PAID" },
 			{ new: true },
 		);

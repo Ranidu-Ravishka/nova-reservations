@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
+import { Types } from "mongoose";
 import { Hotel } from "../models/Hotel";
-import { Payment } from "../models/Payment";
 import { Reservation } from "../models/Reservation";
 import { Room } from "../models/Room";
 import { countOverlappingReservations } from "../services/availability.service";
@@ -28,10 +28,32 @@ export const createReservation = async (
 		}
 
 		const userId = req.user.id;
-		const { roomTypeId, checkIn, checkOut, roomsBooked } = req.body;
+		const { roomTypeId, checkIn, checkOut, roomsBooked } = req.body ?? {};
 
-		if (!roomTypeId || !checkIn || !checkOut || !roomsBooked) {
+		if (
+			typeof roomTypeId !== "string" ||
+			!Types.ObjectId.isValid(roomTypeId) ||
+			typeof checkIn !== "string" ||
+			typeof checkOut !== "string" ||
+			roomsBooked === undefined
+		) {
 			return res.status(400).json({ message: "Missing booking data" });
+		}
+
+		const checkInDate = new Date(checkIn);
+		const checkOutDate = new Date(checkOut);
+		if (
+			Number.isNaN(checkInDate.getTime()) ||
+			Number.isNaN(checkOutDate.getTime()) ||
+			checkOutDate <= checkInDate
+		) {
+			return res.status(400).json({ message: "Invalid date range" });
+		}
+
+		const nights =
+			(checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
+		if (!Number.isInteger(nights)) {
+			return res.status(400).json({ message: "Dates must span whole nights" });
 		}
 
 		/* 1️⃣ Load room */
@@ -45,15 +67,6 @@ export const createReservation = async (
 			return res
 				.status(400)
 				.json({ message: "roomsBooked must be a positive integer" });
-		}
-
-		const checkInDate = new Date(checkIn);
-		const checkOutDate = new Date(checkOut);
-		if (
-			Number.isNaN(checkInDate.getTime()) ||
-			Number.isNaN(checkOutDate.getTime())
-		) {
-			return res.status(400).json({ message: "Invalid dates" });
 		}
 
 		/* 2️⃣ Load hotel */
@@ -78,13 +91,6 @@ export const createReservation = async (
 		}
 
 		/* 4️⃣ Price calculation */
-		const nights =
-			(checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
-
-		if (nights <= 0) {
-			return res.status(400).json({ message: "Invalid dates" });
-		}
-
 		const totalPrice = nights * room.pricePerNight * requestedRooms;
 
 		/* 5️⃣ Create reservation */
@@ -161,7 +167,14 @@ export const getReservationById = async (
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const reservation = await Reservation.findById(req.params.id)
+		const id = req.params.id;
+		if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+			return res
+				.status(400)
+				.json({ message: "Invalid reservation identifier" });
+		}
+
+		const reservation = await Reservation.findById(id)
 			.populate("userId", "name email")
 			.lean();
 
@@ -220,29 +233,44 @@ export const updateReservation = async (
 		const { id } = req.params;
 		const updates = req.body;
 
+		if (
+			!updates ||
+			typeof updates !== "object" ||
+			Array.isArray(updates) ||
+			Object.keys(updates).length !== 1 ||
+			typeof updates.status !== "string" ||
+			!["PENDING", "CONFIRMED", "CANCELLED"].includes(updates.status)
+		) {
+			return res
+				.status(400)
+				.json({ message: "Only a valid status may be updated" });
+		}
+
+		if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+			return res
+				.status(400)
+				.json({ message: "Invalid reservation identifier" });
+		}
+
 		const reservation = await Reservation.findById(id);
 		if (!reservation) {
 			return res.status(404).json({ message: "Reservation not found" });
 		}
+		if (
+			updates.status === "CONFIRMED" &&
+			reservation.paymentStatus !== "PAID"
+		) {
+			return res.status(409).json({
+				message: "Reservation must be paid before it can be confirmed",
+			});
+		}
 
 		const previousStatus = reservation.status;
-		Object.assign(reservation, updates);
+		reservation.status = updates.status;
 		await reservation.save();
 
 		if (previousStatus !== reservation.status) {
 			const io = getIO();
-
-			if (
-				reservation.status === "CANCELLED" &&
-				reservation.paymentStatus === "PAID"
-			) {
-				reservation.paymentStatus = "REFUNDED";
-				await reservation.save();
-				await Payment.findOneAndUpdate(
-					{ reservationId: reservation._id, status: "PAID" },
-					{ status: "REFUNDED" },
-				);
-			}
 
 			const room = await Room.findById(reservation.roomId);
 			if (room) {
@@ -282,7 +310,14 @@ export const cancelReservation = async (
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const reservation = await Reservation.findById(req.params.id);
+		const id = req.params.id;
+		if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+			return res
+				.status(400)
+				.json({ message: "Invalid reservation identifier" });
+		}
+
+		const reservation = await Reservation.findById(id);
 		if (!reservation) {
 			return res.status(404).json({ message: "Reservation not found" });
 		}
@@ -305,13 +340,6 @@ export const cancelReservation = async (
 		}
 
 		reservation.status = "CANCELLED";
-		if (reservation.paymentStatus === "PAID") {
-			reservation.paymentStatus = "REFUNDED";
-			await Payment.findOneAndUpdate(
-				{ reservationId: reservation._id, status: "PAID" },
-				{ status: "REFUNDED" },
-			);
-		}
 
 		await reservation.save();
 

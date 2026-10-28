@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,10 @@ export default function MyReservationsPage() {
 	const [reservations, setReservations] = useState<Reservation[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [cancelError, setCancelError] = useState<{
+		id: string;
+		message: string;
+	} | null>(null);
 
 	const load = useCallback(async () => {
 		const token = localStorage.getItem("token");
@@ -69,19 +74,45 @@ export default function MyReservationsPage() {
 
 	const cancelReservation = async (id: string) => {
 		const token = localStorage.getItem("token");
-		if (!token) return;
+		if (!token) {
+			setCancelError({ id, message: "Sign in to cancel this reservation." });
+			return;
+		}
 
-		await fetch(`/api/reservations/${id}/cancel`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
-			},
-		});
+		setCancelError(null);
+		try {
+			const response = await fetch(`/api/reservations/${id}/cancel`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			if (!response.ok) {
+				const body = await response.json().catch(() => null);
+				setCancelError({
+					id,
+					message:
+						typeof body?.message === "string"
+							? body.message
+							: "Failed to cancel reservation.",
+				});
+				return;
+			}
 
-		setReservations((prev) =>
-			prev.map((r) => (r._id === id ? { ...r, status: "CANCELLED" } : r)),
-		);
+			setReservations((previous) =>
+				previous.map((reservation) =>
+					reservation._id === id
+						? { ...reservation, status: "CANCELLED" }
+						: reservation,
+				),
+			);
+		} catch {
+			setCancelError({
+				id,
+				message: "Could not reach the server. Please try again.",
+			});
+		}
 	};
 
 	const renderCard = (reservation: Reservation) => {
@@ -109,6 +140,15 @@ export default function MyReservationsPage() {
 						{reservation.status} · {reservation.paymentStatus || "UNPAID"}
 					</p>
 				</div>
+				<Link
+					className="mt-4 inline-block text-sm underline"
+					href={`/booking/${reservation._id}`}
+				>
+					View reservation
+				</Link>
+				{cancelError?.id === reservation._id ? (
+					<p className="mt-2 text-sm text-destructive">{cancelError.message}</p>
+				) : null}
 				{isCancelable ? (
 					<Button
 						variant="outline"

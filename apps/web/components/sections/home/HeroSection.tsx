@@ -35,7 +35,7 @@ export default function HeroSection() {
 				<div className="absolute inset-0 bg-linear-to-b from-charcoal/60 via-charcoal/40 to-charcoal/80" />
 			</div>
 
-			<div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+			<div className="relative z-10 w-full min-w-0 text-center px-6 max-w-5xl mx-auto">
 				<motion.div
 					variants={fadeUp}
 					initial="hidden"
@@ -54,7 +54,7 @@ export default function HeroSection() {
 					initial="hidden"
 					animate="visible"
 					transition={{ duration: baseDuration, delay: 0.4 }}
-					className="text-5xl md:text-7xl lg:text-8xl font-serif font-semibold text-stone-200 mb-6 text-balance"
+					className="text-4xl min-[375px]:text-5xl md:text-7xl lg:text-8xl font-serif font-semibold text-stone-200 mb-6 text-balance"
 				>
 					Nova Reservations
 					<span className="block text-stone-200">Group</span>

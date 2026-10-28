@@ -31,15 +31,15 @@ export default function RoomsPage() {
 	const [editingRoom, setEditingRoom] = useState<Room | undefined>(undefined);
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
-	const [availabilityFilter, setAvailabilityFilter] = useState<
-		"all" | "available" | "unavailable"
+	const [activeFilter, setActiveFilter] = useState<
+		"all" | "active" | "inactive"
 	>("all");
 
 	const loadRooms = useCallback(async () => {
 		setLoading(true);
 		setError(null);
 		try {
-			const res = await api.get("/rooms");
+			const res = await api.get("/rooms/admin");
 			setRooms(res.data);
 		} catch (err: unknown) {
 			setError(getErrorMessage(err, "Failed to load rooms"));
@@ -52,27 +52,40 @@ export default function RoomsPage() {
 		loadRooms();
 	}, [loadRooms]);
 
-	const remove = async (id: string) => {
-		if (!confirm("Delete this room?")) return;
+	const toggleActive = async (room: Room) => {
+		const nextIsActive = !room.isActive;
+		if (!confirm(`${nextIsActive ? "Activate" : "Deactivate"} this room?`)) {
+			return;
+		}
 		try {
-			await api.delete(`/rooms/${id}`);
-			setRooms((prev) => prev.filter((r) => r._id !== id));
-			toast.success("Room deleted");
+			if (nextIsActive) {
+				await api.put(`/rooms/${room._id}`, { isActive: true });
+			} else {
+				await api.delete(`/rooms/${room._id}`);
+			}
+			setRooms((previous) =>
+				previous.map((current) =>
+					current._id === room._id
+						? { ...current, isActive: nextIsActive }
+						: current,
+				),
+			);
+			toast.success(`Room ${nextIsActive ? "activated" : "deactivated"}`);
 		} catch (err: unknown) {
-			toast.error(getErrorMessage(err, "Failed to delete room"));
+			toast.error(getErrorMessage(err, "Failed to update room status"));
 		}
 	};
 
 	const filteredRooms = rooms.filter((r) => {
 		const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
-		const matchesAvailability =
-			availabilityFilter === "all" ||
-			(availabilityFilter === "available" && r.isAvailable) ||
-			(availabilityFilter === "unavailable" && r.isAvailable === false);
-		return matchesSearch && matchesAvailability;
+		const matchesStatus =
+			activeFilter === "all" ||
+			(activeFilter === "active" && r.isActive) ||
+			(activeFilter === "inactive" && !r.isActive);
+		return matchesSearch && matchesStatus;
 	});
 
-	const availableCount = rooms.filter((room) => room.isAvailable).length;
+	const activeCount = rooms.filter((room) => room.isActive).length;
 
 	return (
 		<PageContainer>
@@ -115,9 +128,9 @@ export default function RoomsPage() {
 				<Card className="luxury-card">
 					<CardContent className="p-5">
 						<p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-							Available Tonight
+							Active Room Types
 						</p>
-						<p className="text-3xl font-display mt-2">{availableCount}</p>
+						<p className="text-3xl font-display mt-2">{activeCount}</p>
 					</CardContent>
 				</Card>
 				<Card className="luxury-card">
@@ -144,24 +157,24 @@ export default function RoomsPage() {
 				<div className="flex items-center gap-2 text-sm">
 					<button
 						type="button"
-						className={`px-3 py-1 rounded-full border border-white/10 ${availabilityFilter === "all" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
-						onClick={() => setAvailabilityFilter("all")}
+						className={`px-3 py-1 rounded-full border border-white/10 ${activeFilter === "all" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
+						onClick={() => setActiveFilter("all")}
 					>
 						All
 					</button>
 					<button
 						type="button"
-						className={`px-3 py-1 rounded-full border border-white/10 ${availabilityFilter === "available" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
-						onClick={() => setAvailabilityFilter("available")}
+						className={`px-3 py-1 rounded-full border border-white/10 ${activeFilter === "active" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
+						onClick={() => setActiveFilter("active")}
 					>
-						Available
+						Active
 					</button>
 					<button
 						type="button"
-						className={`px-3 py-1 rounded-full border border-white/10 ${availabilityFilter === "unavailable" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
-						onClick={() => setAvailabilityFilter("unavailable")}
+						className={`px-3 py-1 rounded-full border border-white/10 ${activeFilter === "inactive" ? "bg-white/10 text-foreground" : "text-muted-foreground"}`}
+						onClick={() => setActiveFilter("inactive")}
 					>
-						Unavailable
+						Inactive
 					</button>
 				</div>
 			</div>
@@ -201,6 +214,7 @@ export default function RoomsPage() {
 									<TableHead>Room</TableHead>
 									<TableHead>Hotel</TableHead>
 									<TableHead>Price</TableHead>
+									<TableHead>Status</TableHead>
 									<TableHead className="text-right">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
@@ -215,10 +229,16 @@ export default function RoomsPage() {
 												: (room.hotelId?.name ?? "-")}
 										</TableCell>
 										<TableCell>${room.pricePerNight}</TableCell>
+										<TableCell>
+											{room.isActive ? "Active" : "Inactive"}
+										</TableCell>
 										<TableCell className="text-right flex gap-2 justify-end">
 											<Button
-												size="icon"
+												size={room.isActive ? "icon" : "sm"}
 												variant="ghost"
+												aria-label={
+													room.isActive ? "Deactivate room" : "Activate room"
+												}
 												onClick={() => {
 													setEditingRoom(room);
 													setOpen(true);
@@ -230,9 +250,13 @@ export default function RoomsPage() {
 											<Button
 												size="icon"
 												variant="ghost"
-												onClick={() => remove(room._id)}
+												onClick={() => toggleActive(room)}
 											>
-												<Trash2 className="h-4 w-4 text-red-500" />
+												{room.isActive ? (
+													<Trash2 className="h-4 w-4 text-red-500" />
+												) : (
+													"Activate"
+												)}
 											</Button>
 										</TableCell>
 									</TableRow>

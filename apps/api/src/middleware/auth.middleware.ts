@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
+import { Types } from "mongoose";
+import { Roles } from "../constants/roles";
 
 /* ---------- EXTENDED REQUEST ---------- */
 export interface AuthRequest extends Request {
@@ -33,16 +35,19 @@ export function requireAuth(
 	try {
 		const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
-		// Type guard to ensure decoded has required properties
 		if (
 			typeof decoded !== "string" &&
 			decoded &&
-			"id" in decoded &&
-			"role" in decoded
+			typeof decoded.id === "string" &&
+			Types.ObjectId.isValid(decoded.id) &&
+			typeof decoded.role === "string" &&
+			Object.values(Roles).includes(
+				decoded.role as (typeof Roles)[keyof typeof Roles],
+			)
 		) {
 			req.user = {
-				id: decoded.id as string,
-				role: decoded.role as string,
+				id: decoded.id,
+				role: decoded.role,
 			};
 			next();
 		} else {

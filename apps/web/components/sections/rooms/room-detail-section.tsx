@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { api, checkRoomAvailability, createReservation } from "@/lib/api";
@@ -20,9 +21,7 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 		totalPrice: number;
 	}>(null);
 	const [loading, setLoading] = useState(false);
-	const [remainingRooms, setRemainingRooms] = useState<number | null>(
-		room.totalRooms ?? null,
-	);
+	const [remainingRooms, setRemainingRooms] = useState<number | null>(null);
 
 	/* 🔌 SOCKET: real-time availability */
 	useEffect(() => {
@@ -32,7 +31,8 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 
 		const handler = (data: AvailabilityUpdatePayload) => {
 			if (data.roomId === room._id) {
-				setRemainingRooms(data.remaining);
+				setSummary(null);
+				setRemainingRooms(null);
 			}
 		};
 
@@ -84,16 +84,19 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 				(checkOutDate.getTime() - checkInDate.getTime()) /
 				(1000 * 60 * 60 * 24);
 
+			setRemainingRooms(res.availableRooms);
+			if (res.availableRooms < 1) {
+				setSummary(null);
+				setError("No rooms are available for those dates.");
+				return;
+			}
+
+			const requestedRooms = Math.min(roomsBooked, res.availableRooms);
+			setRoomsBooked(requestedRooms);
 			setSummary({
 				availableRooms: res.availableRooms,
-				totalPrice: nights * room.pricePerNight * roomsBooked,
+				totalPrice: nights * room.pricePerNight * requestedRooms,
 			});
-
-			setRemainingRooms(res.availableRooms);
-
-			if (roomsBooked > res.availableRooms) {
-				setRoomsBooked(res.availableRooms);
-			}
 		} catch {
 			setError("Failed to check availability");
 		} finally {
@@ -129,8 +132,15 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 			// 3️⃣ Redirect to PayPal
 			window.location.href = res.data.approvalUrl;
 		} catch (err) {
+			const message = isAxiosError<{ message?: unknown }>(err)
+				? err.response?.data?.message
+				: undefined;
 			setError(
-				err instanceof Error ? err.message : "Payment initiation failed",
+				typeof message === "string"
+					? message
+					: err instanceof Error
+						? err.message
+						: "Payment initiation failed",
 			);
 		} finally {
 			setLoading(false);
@@ -167,13 +177,23 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 						<input
 							type="date"
 							value={checkIn}
-							onChange={(e) => setCheckIn(e.target.value)}
+							onChange={(e) => {
+								setSummary(null);
+								setRemainingRooms(null);
+								setError(null);
+								setCheckIn(e.target.value);
+							}}
 							className="border p-3 rounded-lg"
 						/>
 						<input
 							type="date"
 							value={checkOut}
-							onChange={(e) => setCheckOut(e.target.value)}
+							onChange={(e) => {
+								setSummary(null);
+								setRemainingRooms(null);
+								setError(null);
+								setCheckOut(e.target.value);
+							}}
 							className="border p-3 rounded-lg"
 						/>
 					</div>
@@ -190,11 +210,24 @@ export default function RoomDetailSection({ room }: { room: Room }) {
 								min={1}
 								max={summary.availableRooms}
 								value={roomsBooked}
-								onChange={(e) =>
-									setRoomsBooked(
-										Math.min(Number(e.target.value), summary.availableRooms),
-									)
-								}
+								onChange={(e) => {
+									const requestedRooms = Math.max(
+										1,
+										Math.min(
+											Number(e.target.value) || 1,
+											summary.availableRooms,
+										),
+									);
+									const nights =
+										(new Date(checkOut).getTime() -
+											new Date(checkIn).getTime()) /
+										(1000 * 60 * 60 * 24);
+									setRoomsBooked(requestedRooms);
+									setSummary({
+										...summary,
+										totalPrice: nights * room.pricePerNight * requestedRooms,
+									});
+								}}
 								className="w-20 border p-2 rounded-lg"
 							/>
 						</div>

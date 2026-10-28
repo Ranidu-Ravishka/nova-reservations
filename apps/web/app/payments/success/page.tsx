@@ -30,7 +30,10 @@ function PaymentSuccessContent() {
 				reservationId,
 			}),
 		})
-			.then(() => router.push(`/booking/confirmation/${reservationId}`))
+			.then((response) => {
+				if (!response.ok) throw new Error("Payment execution failed");
+				router.push(`/booking/confirmation/${reservationId}`);
+			})
 			.catch(() => router.push("/profile/reservations"));
 	}, [params, router]);
 

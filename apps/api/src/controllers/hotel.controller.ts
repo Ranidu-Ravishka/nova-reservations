@@ -3,16 +3,8 @@ import { Hotel } from "../models/Hotel";
 
 // CREATE hotel
 export const createHotel = async (req: Request, res: Response) => {
-	try {
-		const hotel = await Hotel.create(req.body);
-		res.status(201).json(hotel);
-	} catch (error) {
-		console.error("Hotel creation error:", error);
-		res.status(400).json({
-			message: "Hotel creation failed",
-			error,
-		});
-	}
+	const hotel = await Hotel.create(req.body);
+	return res.status(201).json(hotel);
 };
 
 // GET all hotels
@@ -32,12 +24,15 @@ export const getHotelById = async (req: Request, res: Response) => {
 export const updateHotel = async (req: Request, res: Response) => {
 	const hotel = await Hotel.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
+		runValidators: true,
 	});
+	if (!hotel) return res.status(404).json({ message: "Hotel not found" });
 	res.json(hotel);
 };
 
 // DELETE hotel
 export const deleteHotel = async (req: Request, res: Response) => {
-	await Hotel.findByIdAndDelete(req.params.id);
+	const hotel = await Hotel.findByIdAndDelete(req.params.id);
+	if (!hotel) return res.status(404).json({ message: "Hotel not found" });
 	res.json({ message: "Hotel deleted" });
 };

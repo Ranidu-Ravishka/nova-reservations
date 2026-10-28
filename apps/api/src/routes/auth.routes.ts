@@ -11,22 +11,26 @@ const router = Router();
  */
 router.post("/register", async (req, res) => {
 	try {
-		const { name, email, password } = req.body as {
+		const { name, email, password } = (req.body ?? {}) as {
 			name?: string;
 			email?: string;
 			password?: string;
 		};
 
-		if (!name || !email || !password) {
+		if (
+			typeof name !== "string" ||
+			!name.trim() ||
+			typeof email !== "string" ||
+			!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+			typeof password !== "string"
+		) {
 			return res
 				.status(400)
 				.json({ message: "Name, email and password are required" });
 		}
 
-		if (typeof password !== "string" || password.length < 8) {
-			return res
-				.status(400)
-				.json({ message: "Password must be at least 8 characters" });
+		if (password.length < 8 || Buffer.byteLength(password, "utf8") > 72) {
+			return res.status(400).json({ message: "Password must be 8–72 bytes" });
 		}
 
 		const normalizedEmail = String(email).trim().toLowerCase();
@@ -36,7 +40,7 @@ router.post("/register", async (req, res) => {
 		}
 
 		const user = await UserModel.create({
-			name: String(name).trim(),
+			name: name.trim(),
 			email: normalizedEmail,
 			password,
 			role: Roles.CUSTOMER,
@@ -80,18 +84,24 @@ router.post("/register", async (req, res) => {
  */
 router.post("/login", async (req, res) => {
 	try {
-		const { email, password } = req.body as {
+		const { email, password } = (req.body ?? {}) as {
 			name?: string;
 			email?: string;
 			password?: string;
 		};
 
-		if (!email || !password) {
+		if (
+			typeof email !== "string" ||
+			!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+			typeof password !== "string"
+		) {
 			return res.status(400).json({ message: "Email and password required" });
 		}
 
 		// `password` is excluded by default in the schema, so we must explicitly select it
-		const user = await UserModel.findOne({ email }).select("+password");
+		const user = await UserModel.findOne({
+			email: email.trim().toLowerCase(),
+		}).select("+password");
 
 		if (!user) {
 			return res.status(401).json({ message: "Invalid credentials" });
@@ -121,6 +131,7 @@ router.post("/login", async (req, res) => {
 			role: user.role,
 			user: {
 				id: user._id,
+				name: user.name,
 				email: user.email,
 			},
 		});
